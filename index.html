@@ -5,7 +5,6 @@
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>Conferência de Pallets</title>
 
-<!-- SheetJS opcional para XLSX -->
 <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 
 <style>
@@ -14,39 +13,28 @@
     --accent:#22d3ee; --good:#22c55e; --warn:#f59e0b; --bad:#ef4444; --white:#e5e7eb;
   }
   html,body{height:100%}
-  body{
-    margin:0; background:linear-gradient(180deg, var(--bg), #000);
-    color:var(--white); font:500 15px/1.5 system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, Cantarell, "Helvetica Neue", Arial;
-  }
+  body{margin:0; background:linear-gradient(180deg, var(--bg), #000); color:var(--white);
+    font:500 15px/1.5 system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,Cantarell,"Helvetica Neue",Arial;}
   .wrap{max-width:1100px; margin:18px auto; padding:0 10px}
   .card{background:var(--panel); border:1px solid var(--border); border-radius:14px; box-shadow:0 10px 25px rgba(0,0,0,.25); overflow:hidden;}
   header{display:flex; align-items:center; justify-content:space-between; gap:10px; padding:12px 12px 6px 12px;}
   h1{font-size:18px; margin:0}
   .muted{color:var(--muted); font-weight:400}
   .toolbar{display:flex; flex-wrap:wrap; gap:8px; align-items:center; padding:0 12px 10px 12px;}
-  .btn, .file{
-    appearance:none; border:1px solid var(--border); border-radius:10px; padding:7px 10px;
-    background:#0b1220; color:var(--white); cursor:pointer; font-size:13px;
-  }
+  .btn,.file{appearance:none; border:1px solid var(--border); border-radius:10px; padding:7px 10px;
+    background:#0b1220; color:var(--white); cursor:pointer; font-size:13px;}
   .btn:hover{border-color:#2b3648}
-  .btn.accent{border-color:transparent; background:linear-gradient(90deg, #0891b2, #06b6d4); color:#001016; font-weight:700}
-  .input, select{
-    background:#0b1220; border:1px solid var(--border); border-radius:10px; color:var(--white);
-    padding:7px 9px; min-width:200px; font-size:13px;
-  }
+  .btn.accent{border-color:transparent; background:linear-gradient(90deg,#0891b2,#06b6d4); color:#001016; font-weight:700}
+  .input,select{background:#0b1220; border:1px solid var(--border); border-radius:10px; color:var(--white);
+    padding:7px 9px; min-width:200px; font-size:13px;}
   select{width:100%}
   .hint{font-size:11px; color:var(--muted); margin-left:4px}
-  .banner{
-    margin:0 12px 10px; padding:8px 10px; border-radius:10px; font-size:13px;
-    background:rgba(239,68,68,.12); border:1px solid rgba(239,68,68,.35); color:#fecaca; display:none;
-  }
+  .banner{margin:0 12px 10px; padding:8px 10px; border-radius:10px; font-size:13px; display:none}
+  .banner.err{background:rgba(239,68,68,.12); border:1px solid rgba(239,68,68,.35); color:#fecaca}
+  .banner.ok{background:rgba(34,197,94,.10); border:1px solid rgba(34,197,94,.35); color:#86efac}
   table{width:100%; border-collapse:collapse}
-  thead th{
-    position:sticky; top:0; background:var(--panel);
-    text-align:left; font-weight:700; color:#cbd5e1; font-size:12px; text-transform:uppercase; letter-spacing:.06em;
-    border-bottom:1px solid var(--border); padding:8px 9px;
-    z-index:1;
-  }
+  thead th{position:sticky; top:0; background:var(--panel); text-align:left; font-weight:700; color:#cbd5e1; font-size:12px;
+    text-transform:uppercase; letter-spacing:.06em; border-bottom:1px solid var(--border); padding:8px 9px; z-index:1;}
   tbody td{border-top:1px dashed #1b2233; padding:8px 9px; vertical-align:middle}
   tbody tr:hover{background:#0c1426}
   .number{width:110px}
@@ -54,39 +42,34 @@
   .flex{display:flex; gap:6px; align-items:center; flex-wrap:wrap}
   .pill{padding:4px 8px; border-radius:999px; font-size:12px; border:1px solid var(--border); background:#0b1220; white-space:nowrap}
   .pill.good{border-color:rgba(34,197,94,.35); color:var(--good)}
-  .pill.warn{border-color:rgba(245,158,11,.35); color:var(--warn)}
+  .pill.warn{border-color:rgba(245,158,11,.35); color:#fbbf24}
   tfoot td{border-top:2px solid var(--border); padding:9px}
   .right{text-align:right}
   .grid2{display:grid; grid-template-columns:1fr auto; gap:8px; align-items:center}
   .small{font-size:12px; color:var(--muted)}
   .footnote{padding:8px 12px 12px 12px}
 
-  /* ======= MODO COMPACTO (<= 768 px) ======= */
   @media (max-width:768px){
     .wrap{margin:10px auto; padding:0 8px}
     header{padding:10px}
     .toolbar{padding:0 10px 8px 10px}
     h1{font-size:17px}
-    .input, select{min-width:150px; font-size:13px; padding:7px 8px}
-    .btn, .file{font-size:13px; padding:7px 9px}
+    .input,select{min-width:150px; font-size:13px; padding:7px 8px}
+    .btn,.file{font-size:13px; padding:7px 9px}
     thead th{font-size:11px; padding:7px}
     tbody td{padding:7px}
     .number{width:88px}
     .readonly{padding:6px 7px}
   }
-
-  /* ======= MODO CELULAR (<= 480 px) ======= */
   @media (max-width:480px){
-    table, thead, tbody, tfoot, th, td, tr{display:block}
+    table,thead,tbody,tfoot,th,td,tr{display:block}
     thead{display:none}
     tbody tr{border-top:1px solid var(--border); padding:8px 6px}
     tbody td{border:none; padding:6px 4px}
     tbody td .label{display:block; font-size:11px; color:#93a4bd; margin-bottom:4px; text-transform:uppercase; letter-spacing:.04em}
     .number{width:100%}
     .flex{gap:4px}
-    /* Esconde a coluna "Detalhe" no celular para caber tudo */
     td[data-col="detalhe"]{display:none}
-    /* Totais como grid enxuto */
     tfoot tr{display:grid; grid-template-columns:1fr 1fr; gap:6px; padding:8px}
     tfoot td{border:none; padding:6px}
     .right{text-align:left}
@@ -99,23 +82,24 @@
       <header>
         <div>
           <h1>Conferência de Pallets</h1>
-          <div class="muted">Selecione até 20 produtos do arquivo e informe a quantidade da nota para ver os pallets.</div>
+          <div class="muted">Selecione até 20 produtos e informe a quantidade da nota.</div>
         </div>
         <button class="btn accent" id="btnLimpar">Limpar</button>
       </header>
 
       <div class="toolbar">
         <div class="grid2" style="min-width:260px">
-          <input id="urlCSV" class="input" placeholder="Caminho do produtos.csv (opcional)" />
+          <input id="urlCSV" class="input" placeholder="URL do produtos.csv (opcional)" />
           <button class="btn" id="btnCarregarURL">Carregar CSV</button>
         </div>
         <div class="grid2" style="min-width:260px">
           <input type="file" id="filePicker" class="file" accept=".csv,.xlsx,.xls" />
-          <span class="hint">Ou deixe <code>produtos.csv</code> na mesma pasta.</span>
+          <span class="hint">Ou deixe <code>produtos.csv</code> junto do index.</span>
         </div>
       </div>
 
-      <div id="bannerErro" class="banner"></div>
+      <div id="bannerInfo" class="banner ok"></div>
+      <div id="bannerErro" class="banner err"></div>
 
       <div style="padding:0 12px 8px 12px" class="small">
         <span class="pill">Regra</span> Pallets = <strong>Qtd. da Nota ÷ Caixas/Pallet</strong>.
@@ -146,51 +130,29 @@
       </div>
 
       <div class="footnote small">
-        <strong>Carregamento automático:</strong> o painel procura por <code>produtos.csv</code> na mesma pasta do <code>index.html</code>.  
+        <strong>Status:</strong> <span id="statusCsv">tentando carregar…</span> •
         Produtos carregados: <span id="contadorProdutos">0</span>
       </div>
     </div>
   </div>
 
 <script>
-/** ================== CONFIG =================== */
-/* Se o CSV estiver na mesma pasta do index.html, mantenha como 'produtos.csv'.
-   Se estiver em outro lugar, coloque o caminho ABSOLUTO do GitHub Pages, ex.:
-   const CSV_PATH = 'https://logisticaincobel.github.io/workstation/produtos.csv';
-*/
-const CSV_PATH = 'produtos.csv';
-
-/** ================== Utilidades =================== */
+/* =================== Utilidades =================== */
 const byId = id => document.getElementById(id);
-const fmt = n => Number.isFinite(n) ? n.toLocaleString('pt-BR', {maximumFractionDigits: 2}) : '';
-const toNumber = v => {
-  if (typeof v === 'number') return v;
-  if (!v) return NaN;
-  return Number(String(v).replace(/\uFEFF/g,'').replace(/\./g,'').replace(',', '.')); // remove BOM
-};
-function showError(msg){
-  const el = byId('bannerErro');
-  el.textContent = msg;
-  el.style.display = 'block';
-}
-function clearError(){
-  const el = byId('bannerErro');
-  el.textContent = '';
-  el.style.display = 'none';
-}
+const fmt = n => Number.isFinite(n) ? n.toLocaleString('pt-BR', {maximumFractionDigits:2}) : '';
+const toNumber = v => (v===0||v) ? Number(String(v).replace(/\uFEFF/g,'').replace(/\./g,'').replace(',', '.')) : NaN;
+function show(el,msg){ el.textContent = msg; el.style.display = 'block'; }
+function hide(el){ el.textContent=''; el.style.display='none'; }
 
-/** ================== Base de produtos =================== */
-let produtos = []; // [{nome, caixasPorPallet}]
-let mapa = new Map(); // nome -> caixasPorPallet
+/* =================== CSV: parsing & carga =================== */
+let produtos = [];              // [{nome, caixasPorPallet}]
+let mapa = new Map();           // nome -> caixasPorPallet
 const MAX_LINHAS = 20;
 
 function detectDelimiter(line){
-  // se houver mais ; do que , usa ponto-e-vírgula
-  const c = (line.match(/,/g)||[]).length;
-  const s = (line.match(/;/g)||[]).length;
-  return s > c ? ';' : ',';
+  const c = (line.match(/,/g)||[]).length, s=(line.match(/;/g)||[]).length;
+  return s>c?';':',';
 }
-
 async function carregarCSVTexto(csvText){
   const linhas = csvText.replace(/^\uFEFF/, '').split(/\r?\n/).map(l=>l.trim()).filter(Boolean);
   if (!linhas.length) return [];
@@ -200,8 +162,8 @@ async function carregarCSVTexto(csvText){
     const parts = linhas[i]
       .split(new RegExp(`${delim}(?![^"]*"(?:(?:[^"]*"){2})*[^"]*$)`))
       .map(s => s.replace(/^"|"$/g,'').trim());
-    if (i===0 && parts[0]?.toLowerCase().includes('produto')) continue; // cabeçalho
-    if (parts.length < 2) continue;
+    if (i===0 && (parts[0]||'').toLowerCase().includes('produto')) continue;
+    if (parts.length<2) continue;
     const nome = parts[0];
     const caixas = toNumber(parts[1]);
     if (!nome || !Number.isFinite(caixas)) continue;
@@ -209,127 +171,94 @@ async function carregarCSVTexto(csvText){
   }
   return out;
 }
-
 async function carregarDeURL(url){
-  const res = await fetch(url + (url.includes('?') ? '&' : '?') + 'v=' + Date.now()); // cache-busting
-  if (!res.ok) throw new Error('Não foi possível baixar o arquivo em ' + url);
+  const res = await fetch(url + (url.includes('?')?'&':'?') + 'v=' + Date.now()); // cache bust
+  if (!res.ok) throw new Error('HTTP ' + res.status);
   const text = await res.text();
-  return await carregarCSVTexto(text);
+  return carregarCSVTexto(text);
 }
-
 async function carregarDeArquivo(arquivo){
-  const nome = arquivo.name.toLowerCase();
-  if (nome.endsWith('.csv')){
-    const text = await arquivo.text();
-    return await carregarCSVTexto(text);
-  } else {
-    const data = await arquivo.arrayBuffer();
-    const wb = XLSX.read(data, {type:'array'});
-    const ws = wb.Sheets[wb.SheetNames[0]];
-    const rows = XLSX.utils.sheet_to_json(ws, {header:1, raw:false, defval:''});
-    const csv = rows.map(r => r.map(x => String(x)).join(',')).join('\n');
-    return await carregarCSVTexto(csv);
+  if (arquivo.name.toLowerCase().endsWith('.csv')){
+    return carregarCSVTexto(await arquivo.text());
   }
+  const data = await arquivo.arrayBuffer();
+  const wb = XLSX.read(data, {type:'array'});
+  const ws = wb.Sheets[wb.SheetNames[0]];
+  const rows = XLSX.utils.sheet_to_json(ws, {header:1, raw:false, defval:''});
+  const csv = rows.map(r => r.map(x => String(x)).join(',')).join('\n');
+  return carregarCSVTexto(csv);
 }
 
-function atualizarMapa(prodList){
-  produtos = prodList.sort((a,b)=>a.nome.localeCompare(b.nome,'pt-BR',{sensitivity:'base'}));
-  mapa = new Map(produtos.map(p=>[p.nome, p.caixasPorPallet]));
-  byId('contadorProdutos').textContent = produtos.length;
-  montarOpcoesSelect(); // atualiza todas as listas
-  if (produtos.length === 0){
-    showError('Nenhum produto carregado. Confira o caminho do CSV ou o formato (use cabeçalho "Produto,CaixasPorPallet").');
-  } else {
-    clearError();
-  }
+/* tenta múltiplos caminhos automaticamente */
+function buildCandidateUrls(){
+  const origin = location.origin;
+  const base = origin + location.pathname.replace(/[^/]*$/, '');
+  const user = location.hostname.split('.')[0]; // ex: logisticaincobel
+  const repo = `${user}.github.io`;
+
+  return [
+    base + 'produtos.csv',              // mesma pasta
+    origin + '/produtos.csv',           // raiz do site
+    origin + '/workstation/produtos.csv', // fallback comum pra você
+    origin + '/pallets/produtos.csv',   // outro fallback
+    `https://raw.githubusercontent.com/${user}/${repo}/main/produtos.csv`,
+    `https://raw.githubusercontent.com/${user}/${repo}/gh-pages/produtos.csv`,
+  ];
 }
 
-/** ================== UI: Linhas e cálculos =================== */
-function labelDiv(texto){
-  const d = document.createElement('div');
-  d.className = 'label';
-  d.textContent = texto;
-  return d;
-}
+/* =================== UI (linhas/cálculos) =================== */
+function labelDiv(txt){ const d=document.createElement('div'); d.className='label'; d.textContent=txt; return d; }
 
-function criarLinha(index){
+function criarLinha(i){
   const tr = document.createElement('tr');
 
-  // Produto (SELECT)
   const tdProduto = document.createElement('td');
   tdProduto.appendChild(labelDiv('Produto'));
-  const selectProduto = document.createElement('select');
-  selectProduto.className = 'input';
-  selectProduto.dataset.idx = index;
-  tdProduto.appendChild(selectProduto);
+  const sel = document.createElement('select');
+  sel.className = 'input'; tdProduto.appendChild(sel);
 
-  // Caixas por pallet (readonly)
-  const tdCaixas = document.createElement('td'); tdCaixas.className = 'right';
-  tdCaixas.appendChild(labelDiv('Caixas/Pallet'));
-  const caixas = document.createElement('input');
-  caixas.type = 'text'; caixas.readOnly = true; caixas.className = 'readonly number';
-  caixas.placeholder = '—';
-  tdCaixas.appendChild(caixas);
+  const tdCx = document.createElement('td'); tdCx.className='right';
+  tdCx.appendChild(labelDiv('Caixas/Pallet'));
+  const cx = document.createElement('input'); cx.className='readonly number'; cx.readOnly=true; cx.placeholder='—';
+  tdCx.appendChild(cx);
 
-  // Qtd da nota
-  const tdQtd = document.createElement('td'); tdQtd.className = 'right';
-  tdQtd.appendChild(labelDiv('Qtd. Nota'));
-  const qtd = document.createElement('input');
-  qtd.type = 'number'; qtd.min = '0'; qtd.step = '1'; qtd.className = 'input number';
-  qtd.placeholder = '0';
+  const tdQtd = document.createElement('td'); tdQtd.className='right';
+  tdQtd.appendChild(labelDiv('Qtd. da Nota'));
+  const qtd = document.createElement('input'); qtd.type='number'; qtd.min='0'; qtd.step='1'; qtd.className='input number'; qtd.placeholder='0';
   tdQtd.appendChild(qtd);
 
-  // Pallets (total)
-  const tdPallets = document.createElement('td'); tdPallets.className = 'right';
-  tdPallets.appendChild(labelDiv('Pallets'));
-  const pallets = document.createElement('div');
-  pallets.className = 'readonly number'; pallets.style.textAlign='right';
-  pallets.textContent = '';
-  tdPallets.appendChild(pallets);
+  const tdPal = document.createElement('td'); tdPal.className='right';
+  tdPal.appendChild(labelDiv('Pallets (total)'));
+  const pal = document.createElement('div'); pal.className='readonly number'; pal.style.textAlign='right';
+  tdPal.appendChild(pal);
 
-  // Detalhe (cheios + resto)
-  const tdDetalhe = document.createElement('td'); tdDetalhe.dataset.col='detalhe';
-  tdDetalhe.appendChild(labelDiv('Detalhe'));
-  const detalhe = document.createElement('div'); detalhe.className='flex';
+  const tdDet = document.createElement('td'); tdDet.dataset.col='detalhe';
+  tdDet.appendChild(labelDiv('Detalhe'));
+  const detalhes = document.createElement('div'); detalhes.className='flex';
   const pillCheios = document.createElement('span'); pillCheios.className='pill';
   const pillResto = document.createElement('span'); pillResto.className='pill';
-  detalhe.appendChild(pillCheios); detalhe.appendChild(pillResto);
-  tdDetalhe.appendChild(detalhe);
+  detalhes.appendChild(pillCheios); detalhes.appendChild(pillResto);
+  tdDet.appendChild(detalhes);
 
-  tr.appendChild(tdProduto); tr.appendChild(tdCaixas); tr.appendChild(tdQtd); tr.appendChild(tdPallets); tr.appendChild(tdDetalhe);
+  tr.append(tdProduto, tdCx, tdQtd, tdPal, tdDet);
 
-  // Eventos
-  selectProduto.addEventListener('change', ()=>{
-    const nome = selectProduto.value;
-    if (mapa.has(nome)){
-      const cx = mapa.get(nome);
-      caixas.value = fmt(cx);
-      if (!qtd.value) qtd.focus();
-    } else {
-      caixas.value = '';
-    }
+  sel.addEventListener('change', ()=>{
+    const nome = sel.value;
+    if (mapa.has(nome)){ cx.value = fmt(mapa.get(nome)); if (!qtd.value) qtd.focus(); }
+    else { cx.value=''; }
     recalcular();
   });
-  qtd.addEventListener('input', ()=> recalcular());
+  qtd.addEventListener('input', recalcular);
 
   function recalcular(){
-    const cx = toNumber(caixas.value);
-    const q = toNumber(qtd.value);
-    if (Number.isFinite(cx) && cx>0 && Number.isFinite(q) && q>=0){
-      const total = q / cx;
-      pallets.textContent = fmt(total);
-      const cheios = Math.floor(total);
-      const restoCaixas = q - cheios*cx;
-      pillCheios.textContent = cheios+' cheio(s)';
-      pillResto.textContent = (restoCaixas)+' caixa(s) resto';
-      pillCheios.className = 'pill ' + (restoCaixas===0 ? 'good':'warn');
-      pillResto.className  = 'pill ' + (restoCaixas===0 ? 'good':'warn');
-    } else {
-      pallets.textContent = '';
-      pillCheios.textContent = '—';
-      pillResto.textContent = '—';
-      pillCheios.className='pill';
-      pillResto.className='pill';
+    const c = toNumber(cx.value), q = toNumber(qtd.value);
+    if (Number.isFinite(c) && c>0 && Number.isFinite(q) && q>=0){
+      const total = q/c; pal.textContent = fmt(total);
+      const cheios = Math.floor(total); const resto = q - cheios*c;
+      pillCheios.textContent = cheios+' cheio(s)'; pillResto.textContent = resto+' caixa(s) resto';
+      pillCheios.className = 'pill ' + (resto===0?'good':'warn'); pillResto.className = pillCheios.className;
+    }else{
+      pal.textContent=''; pillCheios.textContent='—'; pillResto.textContent='—'; pillCheios.className='pill'; pillResto.className='pill';
     }
     atualizarTotais();
   }
@@ -338,102 +267,97 @@ function criarLinha(index){
 }
 
 function montarLinhas(){
-  const tbody = byId('tbody');
-  tbody.innerHTML = '';
-  for (let i=0;i<MAX_LINHAS;i++){
-    tbody.appendChild(criarLinha(i+1));
-  }
-  montarOpcoesSelect(); // preenche selects com a base atual
+  const tbody = byId('tbody'); tbody.innerHTML='';
+  for (let i=0;i<MAX_LINHAS;i++) tbody.appendChild(criarLinha(i+1));
+  montarOpcoesSelect();
 }
 
 function montarOpcoesSelect(){
   const selects = byId('tbody').querySelectorAll('select');
   for (const sel of selects){
-    const valorAtual = sel.value;
-    sel.innerHTML = ''; // limpa
+    const prev = sel.value;
+    sel.innerHTML='';
     const opt0 = document.createElement('option');
-    opt0.value = ''; opt0.textContent = produtos.length ? 'Selecione um produto...' : 'Carregue o CSV';
-    opt0.disabled = true; opt0.selected = true;
+    opt0.value=''; opt0.textContent = produtos.length?'Selecione um produto…':'Carregue o CSV'; opt0.disabled=true; opt0.selected=true;
     sel.appendChild(opt0);
     for (const p of produtos){
-      const opt = document.createElement('option');
-      opt.value = p.nome;
-      opt.textContent = p.nome;
-      sel.appendChild(opt);
+      const o=document.createElement('option'); o.value=p.nome; o.textContent=p.nome; sel.appendChild(o);
     }
-    if (valorAtual && mapa.has(valorAtual)){
-      sel.value = valorAtual;
-      sel.dispatchEvent(new Event('change'));
-    }
+    if (prev && mapa.has(prev)){ sel.value=prev; sel.dispatchEvent(new Event('change')); }
   }
 }
 
 function atualizarTotais(){
   const linhas = [...byId('tbody').querySelectorAll('tr')];
-  let totalNota = 0;
-  let totalPallets = 0;
-  let totalCheios = 0;
-  let totalRestoCx = 0;
-
+  let totalNota=0, totalPallets=0, totalCheios=0, totalResto=0;
   for (const tr of linhas){
     const caixas = toNumber(tr.children[1].querySelector('input').value);
     const qtd = toNumber(tr.children[2].querySelector('input').value);
     if (!Number.isFinite(qtd)) continue;
     totalNota += qtd;
     if (Number.isFinite(caixas) && caixas>0){
-      const total = qtd / caixas;
-      totalPallets += total;
-      const cheios = Math.floor(total);
-      const resto = qtd - cheios*caixas;
-      totalCheios += cheios;
-      totalRestoCx += resto;
+      const total = qtd/caixas; totalPallets += total;
+      const cheios = Math.floor(total); const resto = qtd - cheios*caixas;
+      totalCheios += cheios; totalResto += resto;
     }
   }
   byId('totalCaixasNota').textContent = fmt(totalNota);
   byId('totalPallets').textContent = fmt(totalPallets);
-  byId('resumoCheiosResto').textContent = `${fmt(totalCheios)} cheio(s) • ${fmt(totalRestoCx)} caixa(s) de resto`;
+  byId('resumoCheiosResto').textContent = `${fmt(totalCheios)} cheio(s) • ${fmt(totalResto)} caixa(s) de resto`;
 }
 
-/** ================== Carregamento inicial =================== */
+/* =================== Fluxo de carga =================== */
 async function tentarCarregarAutomatico(){
-  try{
-    const url = CSV_PATH.startsWith('http') ? CSV_PATH : (location.pathname.replace(/[^/]*$/, '') + CSV_PATH);
-    const lista = await carregarDeURL(url);
-    atualizarMapa(lista);
-  }catch(e){
-    console.warn('Falha ao carregar CSV padrão:', e);
-    showError('Não foi possível carregar o produtos.csv padrão. Você pode informar a URL acima ou anexar o arquivo.');
+  const status = byId('statusCsv'), ok = byId('bannerInfo'), err = byId('bannerErro');
+  const candidates = buildCandidateUrls();
+  for (const url of candidates){
+    try{
+      const lista = await carregarDeURL(url);
+      if (lista.length){
+        produtos = lista.sort((a,b)=>a.nome.localeCompare(b.nome,'pt-BR',{sensitivity:'base'}));
+        mapa = new Map(produtos.map(p=>[p.nome,p.caixasPorPallet]));
+        byId('contadorProdutos').textContent = produtos.length;
+        montarOpcoesSelect();
+        hide(err);
+        show(ok, `CSV carregado de: ${url}`);
+        status.textContent = 'carregado';
+        return;
+      }
+    }catch(e){}
   }
+  show(err,'Não foi possível localizar o produtos.csv automaticamente. Informe a URL acima ou anexe o arquivo.');
+  status.textContent = 'falhou ao localizar';
 }
 
 byId('btnCarregarURL').addEventListener('click', async ()=>{
-  const url = byId('urlCSV').value.trim();
-  if (!url) { alert('Informe a URL/caminho do CSV.'); return; }
+  const url = byId('urlCSV').value.trim(); if (!url){ alert('Informe a URL do CSV.'); return; }
   try{
     const lista = await carregarDeURL(url);
-    atualizarMapa(lista);
-    alert('Base carregada com sucesso!');
+    produtos = lista.sort((a,b)=>a.nome.localeCompare(b.nome,'pt-BR',{sensitivity:'base'}));
+    mapa = new Map(produtos.map(p=>[p.nome,p.caixasPorPallet]));
+    byId('contadorProdutos').textContent = produtos.length;
+    montarOpcoesSelect();
+    show(byId('bannerInfo'), `CSV carregado de: ${url}`); hide(byId('bannerErro'));
   }catch(e){
-    alert('Falha ao carregar: ' + e.message);
+    show(byId('bannerErro'), 'Falha ao carregar CSV: ' + e.message);
   }
 });
 
 byId('filePicker').addEventListener('change', async (ev)=>{
-  const file = ev.target.files?.[0];
-  if (!file) return;
+  const f = ev.target.files?.[0]; if (!f) return;
   try{
-    const lista = await carregarDeArquivo(file);
-    atualizarMapa(lista);
-    alert('Base carregada com sucesso!');
+    const lista = await carregarDeArquivo(f);
+    produtos = lista.sort((a,b)=>a.nome.localeCompare(b.nome,'pt-BR',{sensitivity:'base'}));
+    mapa = new Map(produtos.map(p=>[p.nome,p.caixasPorPallet]));
+    byId('contadorProdutos').textContent = produtos.length;
+    montarOpcoesSelect();
+    show(byId('bannerInfo'), `CSV carregado do arquivo: ${f.name}`); hide(byId('bannerErro'));
   }catch(e){
-    alert('Falha ao ler arquivo: ' + e.message);
+    show(byId('bannerErro'), 'Falha ao ler arquivo: ' + e.message);
   }
 });
 
-byId('btnLimpar').addEventListener('click', ()=>{
-  montarLinhas();
-  atualizarTotais();
-});
+byId('btnLimpar').addEventListener('click', ()=>{ montarLinhas(); atualizarTotais(); });
 
 (async function main(){
   montarLinhas();
