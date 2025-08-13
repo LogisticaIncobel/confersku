@@ -5,38 +5,43 @@
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>Conferência de Pallets</title>
 
-<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
-
 <style>
   :root{
     --bg:#0f172a; --panel:#111827; --muted:#94a3b8; --border:#1f2937;
-    --accent:#22d3ee; --good:#22c55e; --warn:#f59e0b; --bad:#ef4444; --white:#e5e7eb;
+    --white:#e5e7eb; --good:#22c55e; --warn:#f59e0b;
+    /* tons para zebra */
+    --row-dark:#0c1426;
+    --row-light:#141d31;
   }
   html,body{height:100%}
-  body{margin:0; background:linear-gradient(180deg, var(--bg), #000); color:var(--white);
-    font:500 15px/1.5 system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,Cantarell,"Helvetica Neue",Arial;}
+  body{
+    margin:0; background:linear-gradient(180deg, var(--bg), #000);
+    color:var(--white); font:500 15px/1.5 system-ui,-apple-system,"Segoe UI",Roboto,Ubuntu,Cantarell,"Helvetica Neue",Arial;
+  }
   .wrap{max-width:1100px; margin:18px auto; padding:0 10px}
   .card{background:var(--panel); border:1px solid var(--border); border-radius:14px; box-shadow:0 10px 25px rgba(0,0,0,.25); overflow:hidden;}
   header{display:flex; align-items:center; justify-content:space-between; gap:10px; padding:12px 12px 6px 12px;}
   h1{font-size:18px; margin:0}
   .muted{color:var(--muted); font-weight:400}
-  .toolbar{display:flex; flex-wrap:wrap; gap:8px; align-items:center; padding:0 12px 10px 12px;}
-  .btn,.file{appearance:none; border:1px solid var(--border); border-radius:10px; padding:7px 10px;
-    background:#0b1220; color:var(--white); cursor:pointer; font-size:13px;}
-  .btn:hover{border-color:#2b3648}
-  .btn.accent{border-color:transparent; background:linear-gradient(90deg,#0891b2,#06b6d4); color:#001016; font-weight:700}
-  .input,select{background:#0b1220; border:1px solid var(--border); border-radius:10px; color:var(--white);
-    padding:7px 9px; min-width:200px; font-size:13px;}
+  .btn{
+    appearance:none; border:1px solid var(--border); border-radius:10px; padding:7px 10px;
+    background:linear-gradient(90deg,#0891b2,#06b6d4); color:#001016; cursor:pointer; font-size:13px; font-weight:700;
+  }
+  .input, select{
+    background:#0b1220; border:1px solid var(--border); border-radius:10px; color:var(--white);
+    padding:7px 9px; min-width:200px; font-size:13px;
+  }
   select{width:100%}
-  .hint{font-size:11px; color:var(--muted); margin-left:4px}
-  .banner{margin:0 12px 10px; padding:8px 10px; border-radius:10px; font-size:13px; display:none}
-  .banner.err{background:rgba(239,68,68,.12); border:1px solid rgba(239,68,68,.35); color:#fecaca}
-  .banner.ok{background:rgba(34,197,94,.10); border:1px solid rgba(34,197,94,.35); color:#86efac}
   table{width:100%; border-collapse:collapse}
-  thead th{position:sticky; top:0; background:var(--panel); text-align:left; font-weight:700; color:#cbd5e1; font-size:12px;
-    text-transform:uppercase; letter-spacing:.06em; border-bottom:1px solid var(--border); padding:8px 9px; z-index:1;}
+  thead th{
+    position:sticky; top:0; background:var(--panel);
+    text-align:left; font-weight:700; color:#cbd5e1; font-size:12px; text-transform:uppercase; letter-spacing:.06em;
+    border-bottom:1px solid var(--border); padding:8px 9px; z-index:1;
+  }
+  tbody tr:nth-child(odd){ background:var(--row-dark) }
+  tbody tr:nth-child(even){ background:var(--row-light) }
   tbody td{border-top:1px dashed #1b2233; padding:8px 9px; vertical-align:middle}
-  tbody tr:hover{background:#0c1426}
+  tbody tr:hover{filter:brightness(1.05)}
   .number{width:110px}
   .readonly{background:#0a1323; border:1px solid #192234; color:#cbd5e1; border-radius:8px; padding:7px 8px}
   .flex{display:flex; gap:6px; align-items:center; flex-wrap:wrap}
@@ -45,31 +50,29 @@
   .pill.warn{border-color:rgba(245,158,11,.35); color:#fbbf24}
   tfoot td{border-top:2px solid var(--border); padding:9px}
   .right{text-align:right}
-  .grid2{display:grid; grid-template-columns:1fr auto; gap:8px; align-items:center}
   .small{font-size:12px; color:var(--muted)}
-  .footnote{padding:8px 12px 12px 12px}
 
+  /* Compacto */
   @media (max-width:768px){
     .wrap{margin:10px auto; padding:0 8px}
     header{padding:10px}
-    .toolbar{padding:0 10px 8px 10px}
     h1{font-size:17px}
-    .input,select{min-width:150px; font-size:13px; padding:7px 8px}
-    .btn,.file{font-size:13px; padding:7px 9px}
+    .input, select{min-width:150px; font-size:13px; padding:7px 8px}
     thead th{font-size:11px; padding:7px}
     tbody td{padding:7px}
     .number{width:88px}
     .readonly{padding:6px 7px}
   }
+  /* Celular (cartões) */
   @media (max-width:480px){
-    table,thead,tbody,tfoot,th,td,tr{display:block}
+    table, thead, tbody, tfoot, th, td, tr{display:block}
     thead{display:none}
     tbody tr{border-top:1px solid var(--border); padding:8px 6px}
     tbody td{border:none; padding:6px 4px}
     tbody td .label{display:block; font-size:11px; color:#93a4bd; margin-bottom:4px; text-transform:uppercase; letter-spacing:.04em}
     .number{width:100%}
     .flex{gap:4px}
-    td[data-col="detalhe"]{display:none}
+    td[data-col="detalhe"]{display:none} /* esconde coluna de detalhe no mobile para caber */
     tfoot tr{display:grid; grid-template-columns:1fr 1fr; gap:6px; padding:8px}
     tfoot td{border:none; padding:6px}
     .right{text-align:left}
@@ -84,22 +87,10 @@
           <h1>Conferência de Pallets</h1>
           <div class="muted">Selecione até 20 produtos e informe a quantidade da nota.</div>
         </div>
-        <button class="btn accent" id="btnLimpar">Limpar</button>
+        <button class="btn" id="btnLimpar">Limpar</button>
       </header>
 
-      <div class="toolbar">
-        <div class="grid2" style="min-width:260px">
-          <input id="urlCSV" class="input" placeholder="URL do produtos.csv (opcional)" />
-          <button class="btn" id="btnCarregarURL">Carregar CSV</button>
-        </div>
-        <div class="grid2" style="min-width:260px">
-          <input type="file" id="filePicker" class="file" accept=".csv,.xlsx,.xls" />
-          <span class="hint">Ou deixe <code>produtos.csv</code> junto do index.</span>
-        </div>
-      </div>
-
-      <div id="bannerInfo" class="banner ok"></div>
-      <div id="bannerErro" class="banner err"></div>
+      <!-- Toolbar e banners REMOVIDOS/OCULTOS conforme solicitado -->
 
       <div style="padding:0 12px 8px 12px" class="small">
         <span class="pill">Regra</span> Pallets = <strong>Qtd. da Nota ÷ Caixas/Pallet</strong>.
@@ -128,23 +119,20 @@
           </tfoot>
         </table>
       </div>
-
-      <div class="footnote small">
-        <strong>Status:</strong> <span id="statusCsv">tentando carregar…</span> •
-        Produtos carregados: <span id="contadorProdutos">0</span>
-      </div>
     </div>
   </div>
 
 <script>
+/* =================== CONFIG =================== */
+/* Caminho fixo do CSV no GitHub Pages (ajuste se necessário) */
+const CSV_PATH = 'https://logisticaincobel.github.io/confersku/produtos.csv';
+
 /* =================== Utilidades =================== */
 const byId = id => document.getElementById(id);
 const fmt = n => Number.isFinite(n) ? n.toLocaleString('pt-BR', {maximumFractionDigits:2}) : '';
 const toNumber = v => (v===0||v) ? Number(String(v).replace(/\uFEFF/g,'').replace(/\./g,'').replace(',', '.')) : NaN;
-function show(el,msg){ el.textContent = msg; el.style.display = 'block'; }
-function hide(el){ el.textContent=''; el.style.display='none'; }
 
-/* =================== CSV: parsing & carga =================== */
+/* =================== CSV =================== */
 let produtos = [];              // [{nome, caixasPorPallet}]
 let mapa = new Map();           // nome -> caixasPorPallet
 const MAX_LINHAS = 20;
@@ -177,36 +165,8 @@ async function carregarDeURL(url){
   const text = await res.text();
   return carregarCSVTexto(text);
 }
-async function carregarDeArquivo(arquivo){
-  if (arquivo.name.toLowerCase().endsWith('.csv')){
-    return carregarCSVTexto(await arquivo.text());
-  }
-  const data = await arquivo.arrayBuffer();
-  const wb = XLSX.read(data, {type:'array'});
-  const ws = wb.Sheets[wb.SheetNames[0]];
-  const rows = XLSX.utils.sheet_to_json(ws, {header:1, raw:false, defval:''});
-  const csv = rows.map(r => r.map(x => String(x)).join(',')).join('\n');
-  return carregarCSVTexto(csv);
-}
 
-/* tenta múltiplos caminhos automaticamente */
-function buildCandidateUrls(){
-  const origin = location.origin;
-  const base = origin + location.pathname.replace(/[^/]*$/, '');
-  const user = location.hostname.split('.')[0]; // ex: logisticaincobel
-  const repo = `${user}.github.io`;
-
-  return [
-    base + 'produtos.csv',              // mesma pasta
-    origin + '/produtos.csv',           // raiz do site
-    origin + '/workstation/produtos.csv', // fallback comum pra você
-    origin + '/pallets/produtos.csv',   // outro fallback
-    `https://raw.githubusercontent.com/${user}/${repo}/main/produtos.csv`,
-    `https://raw.githubusercontent.com/${user}/${repo}/gh-pages/produtos.csv`,
-  ];
-}
-
-/* =================== UI (linhas/cálculos) =================== */
+/* =================== UI =================== */
 function labelDiv(txt){ const d=document.createElement('div'); d.className='label'; d.textContent=txt; return d; }
 
 function criarLinha(i){
@@ -256,7 +216,7 @@ function criarLinha(i){
       const total = q/c; pal.textContent = fmt(total);
       const cheios = Math.floor(total); const resto = q - cheios*c;
       pillCheios.textContent = cheios+' cheio(s)'; pillResto.textContent = resto+' caixa(s) resto';
-      pillCheios.className = 'pill ' + (resto===0?'good':'warn'); pillResto.className = pillCheios.className;
+      const cls = 'pill ' + (resto===0?'good':'warn'); pillCheios.className=cls; pillResto.className=cls;
     }else{
       pal.textContent=''; pillCheios.textContent='—'; pillResto.textContent='—'; pillCheios.className='pill'; pillResto.className='pill';
     }
@@ -278,7 +238,7 @@ function montarOpcoesSelect(){
     const prev = sel.value;
     sel.innerHTML='';
     const opt0 = document.createElement('option');
-    opt0.value=''; opt0.textContent = produtos.length?'Selecione um produto…':'Carregue o CSV'; opt0.disabled=true; opt0.selected=true;
+    opt0.value=''; opt0.textContent = produtos.length?'Selecione um produto…':'Carregando base…'; opt0.disabled=true; opt0.selected=true;
     sel.appendChild(opt0);
     for (const p of produtos){
       const o=document.createElement('option'); o.value=p.nome; o.textContent=p.nome; sel.appendChild(o);
@@ -306,63 +266,21 @@ function atualizarTotais(){
   byId('resumoCheiosResto').textContent = `${fmt(totalCheios)} cheio(s) • ${fmt(totalResto)} caixa(s) de resto`;
 }
 
-/* =================== Fluxo de carga =================== */
-async function tentarCarregarAutomatico(){
-  const status = byId('statusCsv'), ok = byId('bannerInfo'), err = byId('bannerErro');
-  const candidates = buildCandidateUrls();
-  for (const url of candidates){
-    try{
-      const lista = await carregarDeURL(url);
-      if (lista.length){
-        produtos = lista.sort((a,b)=>a.nome.localeCompare(b.nome,'pt-BR',{sensitivity:'base'}));
-        mapa = new Map(produtos.map(p=>[p.nome,p.caixasPorPallet]));
-        byId('contadorProdutos').textContent = produtos.length;
-        montarOpcoesSelect();
-        hide(err);
-        show(ok, `CSV carregado de: ${url}`);
-        status.textContent = 'carregado';
-        return;
-      }
-    }catch(e){}
-  }
-  show(err,'Não foi possível localizar o produtos.csv automaticamente. Informe a URL acima ou anexe o arquivo.');
-  status.textContent = 'falhou ao localizar';
-}
-
-byId('btnCarregarURL').addEventListener('click', async ()=>{
-  const url = byId('urlCSV').value.trim(); if (!url){ alert('Informe a URL do CSV.'); return; }
-  try{
-    const lista = await carregarDeURL(url);
-    produtos = lista.sort((a,b)=>a.nome.localeCompare(b.nome,'pt-BR',{sensitivity:'base'}));
-    mapa = new Map(produtos.map(p=>[p.nome,p.caixasPorPallet]));
-    byId('contadorProdutos').textContent = produtos.length;
-    montarOpcoesSelect();
-    show(byId('bannerInfo'), `CSV carregado de: ${url}`); hide(byId('bannerErro'));
-  }catch(e){
-    show(byId('bannerErro'), 'Falha ao carregar CSV: ' + e.message);
-  }
-});
-
-byId('filePicker').addEventListener('change', async (ev)=>{
-  const f = ev.target.files?.[0]; if (!f) return;
-  try{
-    const lista = await carregarDeArquivo(f);
-    produtos = lista.sort((a,b)=>a.nome.localeCompare(b.nome,'pt-BR',{sensitivity:'base'}));
-    mapa = new Map(produtos.map(p=>[p.nome,p.caixasPorPallet]));
-    byId('contadorProdutos').textContent = produtos.length;
-    montarOpcoesSelect();
-    show(byId('bannerInfo'), `CSV carregado do arquivo: ${f.name}`); hide(byId('bannerErro'));
-  }catch(e){
-    show(byId('bannerErro'), 'Falha ao ler arquivo: ' + e.message);
-  }
-});
-
-byId('btnLimpar').addEventListener('click', ()=>{ montarLinhas(); atualizarTotais(); });
-
-(async function main(){
+/* =================== Boot =================== */
+async function main(){
   montarLinhas();
-  await tentarCarregarAutomatico();
-})();
+  try{
+    const lista = await carregarDeURL(CSV_PATH);
+    produtos = lista.sort((a,b)=>a.nome.localeCompare(b.nome,'pt-BR',{sensitivity:'base'}));
+    mapa = new Map(produtos.map(p=>[p.nome,p.caixasPorPallet]));
+    montarOpcoesSelect();
+  }catch(e){
+    console.warn('Falha ao carregar CSV:', e);
+    // silencioso, conforme solicitado (sem banners/avisos)
+  }
+}
+byId('btnLimpar').addEventListener('click', ()=>{ montarLinhas(); atualizarTotais(); });
+main();
 </script>
 </body>
 </html>
