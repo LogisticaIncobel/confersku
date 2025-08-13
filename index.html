@@ -18,61 +18,65 @@
     margin:0; background:linear-gradient(180deg, var(--bg), #000);
     color:var(--white); font:500 15px/1.5 system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, Cantarell, "Helvetica Neue", Arial;
   }
-  .wrap{max-width:1200px; margin:20px auto; padding:0 12px}
+  .wrap{max-width:1100px; margin:18px auto; padding:0 10px}
   .card{background:var(--panel); border:1px solid var(--border); border-radius:14px; box-shadow:0 10px 25px rgba(0,0,0,.25); overflow:hidden;}
-  header{display:flex; align-items:center; justify-content:space-between; gap:12px; padding:16px 14px 8px 14px;}
-  h1{font-size:20px; margin:0}
+  header{display:flex; align-items:center; justify-content:space-between; gap:10px; padding:12px 12px 6px 12px;}
+  h1{font-size:18px; margin:0}
   .muted{color:var(--muted); font-weight:400}
-  .toolbar{display:flex; flex-wrap:wrap; gap:8px; align-items:center; padding:0 14px 12px 14px;}
+  .toolbar{display:flex; flex-wrap:wrap; gap:8px; align-items:center; padding:0 12px 10px 12px;}
   .btn, .file{
-    appearance:none; border:1px solid var(--border); border-radius:10px; padding:9px 12px;
-    background:#0b1220; color:var(--white); cursor:pointer; font-size:14px;
+    appearance:none; border:1px solid var(--border); border-radius:10px; padding:7px 10px;
+    background:#0b1220; color:var(--white); cursor:pointer; font-size:13px;
   }
   .btn:hover{border-color:#2b3648}
   .btn.accent{border-color:transparent; background:linear-gradient(90deg, #0891b2, #06b6d4); color:#001016; font-weight:700}
   .input, select{
     background:#0b1220; border:1px solid var(--border); border-radius:10px; color:var(--white);
-    padding:9px 11px; min-width:220px; font-size:14px;
+    padding:7px 9px; min-width:200px; font-size:13px;
   }
   select{width:100%}
-  .hint{font-size:12px; color:var(--muted); margin-left:4px}
+  .hint{font-size:11px; color:var(--muted); margin-left:4px}
+  .banner{
+    margin:0 12px 10px; padding:8px 10px; border-radius:10px; font-size:13px;
+    background:rgba(239,68,68,.12); border:1px solid rgba(239,68,68,.35); color:#fecaca; display:none;
+  }
   table{width:100%; border-collapse:collapse}
   thead th{
     position:sticky; top:0; background:var(--panel);
     text-align:left; font-weight:700; color:#cbd5e1; font-size:12px; text-transform:uppercase; letter-spacing:.06em;
-    border-bottom:1px solid var(--border); padding:10px 10px;
+    border-bottom:1px solid var(--border); padding:8px 9px;
     z-index:1;
   }
-  tbody td{border-top:1px dashed #1b2233; padding:8px 10px; vertical-align:middle}
+  tbody td{border-top:1px dashed #1b2233; padding:8px 9px; vertical-align:middle}
   tbody tr:hover{background:#0c1426}
   .number{width:110px}
-  .readonly{background:#0a1323; border:1px solid #192234; color:#cbd5e1; border-radius:8px; padding:8px 9px}
+  .readonly{background:#0a1323; border:1px solid #192234; color:#cbd5e1; border-radius:8px; padding:7px 8px}
   .flex{display:flex; gap:6px; align-items:center; flex-wrap:wrap}
-  .pill{padding:5px 8px; border-radius:999px; font-size:12px; border:1px solid var(--border); background:#0b1220; white-space:nowrap}
+  .pill{padding:4px 8px; border-radius:999px; font-size:12px; border:1px solid var(--border); background:#0b1220; white-space:nowrap}
   .pill.good{border-color:rgba(34,197,94,.35); color:var(--good)}
   .pill.warn{border-color:rgba(245,158,11,.35); color:var(--warn)}
-  tfoot td{border-top:2px solid var(--border); padding:10px}
+  tfoot td{border-top:2px solid var(--border); padding:9px}
   .right{text-align:right}
   .grid2{display:grid; grid-template-columns:1fr auto; gap:8px; align-items:center}
   .small{font-size:12px; color:var(--muted)}
-  .footnote{padding:10px 14px 16px 14px}
+  .footnote{padding:8px 12px 12px 12px}
 
-  /* ======= Modo compacto para telas pequenas ======= */
-  @media (max-width: 880px){
+  /* ======= MODO COMPACTO (<= 768 px) ======= */
+  @media (max-width:768px){
     .wrap{margin:10px auto; padding:0 8px}
-    header{padding:12px 10px 6px 10px}
-    .toolbar{padding:0 10px 10px 10px}
-    h1{font-size:18px}
-    .input, select{min-width:180px; font-size:13.5px; padding:8px 10px}
-    .btn, .file{font-size:13.5px; padding:8px 10px}
-    thead th{font-size:11px; padding:8px}
-    tbody td{padding:8px}
-    .number{width:92px}
-    .readonly{padding:7px 8px}
+    header{padding:10px}
+    .toolbar{padding:0 10px 8px 10px}
+    h1{font-size:17px}
+    .input, select{min-width:150px; font-size:13px; padding:7px 8px}
+    .btn, .file{font-size:13px; padding:7px 9px}
+    thead th{font-size:11px; padding:7px}
+    tbody td{padding:7px}
+    .number{width:88px}
+    .readonly{padding:6px 7px}
   }
 
-  /* ======= Layout "cartões" no celular (visão ampla) ======= */
-  @media (max-width: 560px){
+  /* ======= MODO CELULAR (<= 480 px) ======= */
+  @media (max-width:480px){
     table, thead, tbody, tfoot, th, td, tr{display:block}
     thead{display:none}
     tbody tr{border-top:1px solid var(--border); padding:8px 6px}
@@ -80,6 +84,9 @@
     tbody td .label{display:block; font-size:11px; color:#93a4bd; margin-bottom:4px; text-transform:uppercase; letter-spacing:.04em}
     .number{width:100%}
     .flex{gap:4px}
+    /* Esconde a coluna "Detalhe" no celular para caber tudo */
+    td[data-col="detalhe"]{display:none}
+    /* Totais como grid enxuto */
     tfoot tr{display:grid; grid-template-columns:1fr 1fr; gap:6px; padding:8px}
     tfoot td{border:none; padding:6px}
     .right{text-align:left}
@@ -94,23 +101,24 @@
           <h1>Conferência de Pallets</h1>
           <div class="muted">Selecione até 20 produtos do arquivo e informe a quantidade da nota para ver os pallets.</div>
         </div>
-        <button class="btn accent" id="btnLimpar">Limpar tudo</button>
+        <button class="btn accent" id="btnLimpar">Limpar</button>
       </header>
 
       <div class="toolbar">
-        <div class="grid2" style="min-width:280px">
+        <div class="grid2" style="min-width:260px">
           <input id="urlCSV" class="input" placeholder="Caminho do produtos.csv (opcional)" />
           <button class="btn" id="btnCarregarURL">Carregar CSV</button>
         </div>
-        <div class="grid2" style="min-width:280px">
+        <div class="grid2" style="min-width:260px">
           <input type="file" id="filePicker" class="file" accept=".csv,.xlsx,.xls" />
           <span class="hint">Ou deixe <code>produtos.csv</code> na mesma pasta.</span>
         </div>
       </div>
 
-      <div style="padding:0 14px 10px 14px" class="small">
-        <span class="pill">Regra de cálculo</span> Pallets = <strong>Quantidade da Nota ÷ Caixas/Pallet</strong>.
-        Mostramos também <em>pallets cheios</em> e <em>caixas restantes</em>.
+      <div id="bannerErro" class="banner"></div>
+
+      <div style="padding:0 12px 8px 12px" class="small">
+        <span class="pill">Regra</span> Pallets = <strong>Qtd. da Nota ÷ Caixas/Pallet</strong>.
       </div>
 
       <div style="overflow:auto">
@@ -118,7 +126,7 @@
           <thead>
             <tr>
               <th style="min-width:320px">Produto</th>
-              <th class="right number">Caixas por Pallet</th>
+              <th class="right number">Caixas/Pallet</th>
               <th class="right number">Qtd. da Nota</th>
               <th class="right number">Pallets (total)</th>
               <th style="min-width:220px">Detalhe</th>
@@ -138,39 +146,60 @@
       </div>
 
       <div class="footnote small">
-        <strong>Carregamento automático:</strong> este painel procura por <code>produtos.csv</code> na mesma pasta do <code>index.html</code> (GitHub Pages).
+        <strong>Carregamento automático:</strong> o painel procura por <code>produtos.csv</code> na mesma pasta do <code>index.html</code>.  
+        Produtos carregados: <span id="contadorProdutos">0</span>
       </div>
     </div>
   </div>
 
 <script>
+/** ================== CONFIG =================== */
+/* Se o CSV estiver na mesma pasta do index.html, mantenha como 'produtos.csv'.
+   Se estiver em outro lugar, coloque o caminho ABSOLUTO do GitHub Pages, ex.:
+   const CSV_PATH = 'https://logisticaincobel.github.io/workstation/produtos.csv';
+*/
+const CSV_PATH = 'produtos.csv';
+
 /** ================== Utilidades =================== */
 const byId = id => document.getElementById(id);
 const fmt = n => Number.isFinite(n) ? n.toLocaleString('pt-BR', {maximumFractionDigits: 2}) : '';
 const toNumber = v => {
   if (typeof v === 'number') return v;
   if (!v) return NaN;
-  return Number(String(v).replace(/\./g,'').replace(',', '.'));
+  return Number(String(v).replace(/\uFEFF/g,'').replace(/\./g,'').replace(',', '.')); // remove BOM
 };
+function showError(msg){
+  const el = byId('bannerErro');
+  el.textContent = msg;
+  el.style.display = 'block';
+}
+function clearError(){
+  const el = byId('bannerErro');
+  el.textContent = '';
+  el.style.display = 'none';
+}
 
 /** ================== Base de produtos =================== */
 let produtos = []; // [{nome, caixasPorPallet}]
 let mapa = new Map(); // nome -> caixasPorPallet
 const MAX_LINHAS = 20;
 
-/* Resolve a URL padrão do CSV respeitando subpastas do GitHub Pages */
-function defaultCSVUrl(){
-  // caminho da pasta atual (sem o arquivo no final)
-  const base = location.pathname.replace(/[^/]*$/, '');
-  return base + 'produtos.csv';
+function detectDelimiter(line){
+  // se houver mais ; do que , usa ponto-e-vírgula
+  const c = (line.match(/,/g)||[]).length;
+  const s = (line.match(/;/g)||[]).length;
+  return s > c ? ';' : ',';
 }
 
 async function carregarCSVTexto(csvText){
-  const linhas = csvText.split(/\r?\n/).map(l=>l.trim()).filter(Boolean);
+  const linhas = csvText.replace(/^\uFEFF/, '').split(/\r?\n/).map(l=>l.trim()).filter(Boolean);
+  if (!linhas.length) return [];
+  const delim = detectDelimiter(linhas[0]);
   const out = [];
   for (let i=0;i<linhas.length;i++){
-    // separa por vírgula ignorando vírgulas dentro de aspas
-    const parts = linhas[i].split(/,(?![^"]*"(?:(?:[^"]*"){2})*[^"]*$)/).map(s => s.replace(/^"|"$/g,'').trim());
+    const parts = linhas[i]
+      .split(new RegExp(`${delim}(?![^"]*"(?:(?:[^"]*"){2})*[^"]*$)`))
+      .map(s => s.replace(/^"|"$/g,'').trim());
     if (i===0 && parts[0]?.toLowerCase().includes('produto')) continue; // cabeçalho
     if (parts.length < 2) continue;
     const nome = parts[0];
@@ -206,7 +235,13 @@ async function carregarDeArquivo(arquivo){
 function atualizarMapa(prodList){
   produtos = prodList.sort((a,b)=>a.nome.localeCompare(b.nome,'pt-BR',{sensitivity:'base'}));
   mapa = new Map(produtos.map(p=>[p.nome, p.caixasPorPallet]));
+  byId('contadorProdutos').textContent = produtos.length;
   montarOpcoesSelect(); // atualiza todas as listas
+  if (produtos.length === 0){
+    showError('Nenhum produto carregado. Confira o caminho do CSV ou o formato (use cabeçalho "Produto,CaixasPorPallet").');
+  } else {
+    clearError();
+  }
 }
 
 /** ================== UI: Linhas e cálculos =================== */
@@ -220,7 +255,7 @@ function labelDiv(texto){
 function criarLinha(index){
   const tr = document.createElement('tr');
 
-  // Produto (SELECT com opções do CSV)
+  // Produto (SELECT)
   const tdProduto = document.createElement('td');
   tdProduto.appendChild(labelDiv('Produto'));
   const selectProduto = document.createElement('select');
@@ -230,15 +265,15 @@ function criarLinha(index){
 
   // Caixas por pallet (readonly)
   const tdCaixas = document.createElement('td'); tdCaixas.className = 'right';
-  tdCaixas.appendChild(labelDiv('Caixas por Pallet'));
+  tdCaixas.appendChild(labelDiv('Caixas/Pallet'));
   const caixas = document.createElement('input');
   caixas.type = 'text'; caixas.readOnly = true; caixas.className = 'readonly number';
   caixas.placeholder = '—';
   tdCaixas.appendChild(caixas);
 
-  // Qtd da nota (digitável)
+  // Qtd da nota
   const tdQtd = document.createElement('td'); tdQtd.className = 'right';
-  tdQtd.appendChild(labelDiv('Qtd. da Nota'));
+  tdQtd.appendChild(labelDiv('Qtd. Nota'));
   const qtd = document.createElement('input');
   qtd.type = 'number'; qtd.min = '0'; qtd.step = '1'; qtd.className = 'input number';
   qtd.placeholder = '0';
@@ -246,14 +281,14 @@ function criarLinha(index){
 
   // Pallets (total)
   const tdPallets = document.createElement('td'); tdPallets.className = 'right';
-  tdPallets.appendChild(labelDiv('Pallets (total)'));
+  tdPallets.appendChild(labelDiv('Pallets'));
   const pallets = document.createElement('div');
   pallets.className = 'readonly number'; pallets.style.textAlign='right';
   pallets.textContent = '';
   tdPallets.appendChild(pallets);
 
   // Detalhe (cheios + resto)
-  const tdDetalhe = document.createElement('td');
+  const tdDetalhe = document.createElement('td'); tdDetalhe.dataset.col='detalhe';
   tdDetalhe.appendChild(labelDiv('Detalhe'));
   const detalhe = document.createElement('div'); detalhe.className='flex';
   const pillCheios = document.createElement('span'); pillCheios.className='pill';
@@ -285,7 +320,7 @@ function criarLinha(index){
       pallets.textContent = fmt(total);
       const cheios = Math.floor(total);
       const restoCaixas = q - cheios*cx;
-      pillCheios.textContent = cheios+' pallet(s) cheio(s)';
+      pillCheios.textContent = cheios+' cheio(s)';
       pillResto.textContent = (restoCaixas)+' caixa(s) resto';
       pillCheios.className = 'pill ' + (restoCaixas===0 ? 'good':'warn');
       pillResto.className  = 'pill ' + (restoCaixas===0 ? 'good':'warn');
@@ -308,7 +343,7 @@ function montarLinhas(){
   for (let i=0;i<MAX_LINHAS;i++){
     tbody.appendChild(criarLinha(i+1));
   }
-  montarOpcoesSelect(); // preenche selects existentes com a base atual (se houver)
+  montarOpcoesSelect(); // preenche selects com a base atual
 }
 
 function montarOpcoesSelect(){
@@ -317,7 +352,7 @@ function montarOpcoesSelect(){
     const valorAtual = sel.value;
     sel.innerHTML = ''; // limpa
     const opt0 = document.createElement('option');
-    opt0.value = ''; opt0.textContent = 'Selecione um produto...';
+    opt0.value = ''; opt0.textContent = produtos.length ? 'Selecione um produto...' : 'Carregue o CSV';
     opt0.disabled = true; opt0.selected = true;
     sel.appendChild(opt0);
     for (const p of produtos){
@@ -326,7 +361,6 @@ function montarOpcoesSelect(){
       opt.textContent = p.nome;
       sel.appendChild(opt);
     }
-    // tenta restaurar escolha se ainda existir
     if (valorAtual && mapa.has(valorAtual)){
       sel.value = valorAtual;
       sel.dispatchEvent(new Event('change'));
@@ -357,18 +391,18 @@ function atualizarTotais(){
   }
   byId('totalCaixasNota').textContent = fmt(totalNota);
   byId('totalPallets').textContent = fmt(totalPallets);
-  byId('resumoCheiosResto').textContent = `${fmt(totalCheios)} pallet(s) cheio(s) • ${fmt(totalRestoCx)} caixa(s) de resto`;
+  byId('resumoCheiosResto').textContent = `${fmt(totalCheios)} cheio(s) • ${fmt(totalRestoCx)} caixa(s) de resto`;
 }
 
 /** ================== Carregamento inicial =================== */
 async function tentarCarregarAutomatico(){
-  const url = defaultCSVUrl();
   try{
+    const url = CSV_PATH.startsWith('http') ? CSV_PATH : (location.pathname.replace(/[^/]*$/, '') + CSV_PATH);
     const lista = await carregarDeURL(url);
     atualizarMapa(lista);
   }catch(e){
-    console.warn('CSV não encontrado em', url, e);
-    // mantém vazio até o usuário carregar manualmente
+    console.warn('Falha ao carregar CSV padrão:', e);
+    showError('Não foi possível carregar o produtos.csv padrão. Você pode informar a URL acima ou anexar o arquivo.');
   }
 }
 
