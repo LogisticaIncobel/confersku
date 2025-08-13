@@ -157,21 +157,21 @@
   <div id="toast" class="toast"></div>
 
 <script>
-/** ====== CONFIG: troque se precisar usar outro caminho do CSV ====== */
+/** ====== CONFIG: CSV com EAN ====== */
 const CSV_PATH = 'https://logisticaincobel.github.io/confersku/produtos.csv';
 
-/** ====== Utilidades UI ====== */
+/** ====== Helpers ====== */
 const byId = id => document.getElementById(id);
 const fmt = n => Number.isFinite(n) ? n.toLocaleString('pt-BR', {maximumFractionDigits:2}) : '';
 const toNumber = v => (v===0||v) ? Number(String(v).replace(/\uFEFF/g,'').replace(/\./g,'').replace(',', '.')) : NaN;
-function toast(msg, ms=1600){ const t=byId('toast'); t.textContent=msg; t.classList.add('show'); setTimeout(()=>t.classList.remove('show'), ms); }
+function toast(msg, ms=2000){ const t=byId('toast'); t.textContent=msg; t.classList.add('show'); setTimeout(()=>t.classList.remove('show'), ms); }
 function beep(){ try{const ctx=new (window.AudioContext||window.webkitAudioContext)(); const o=ctx.createOscillator(); const g=ctx.createGain(); o.connect(g); g.connect(ctx.destination); o.type='sine'; o.frequency.value=880; o.start(); g.gain.exponentialRampToValueAtTime(0.00001, ctx.currentTime+0.18); setTimeout(()=>ctx.close(),220);}catch{} }
 function vibrate(ms=80){ if(navigator.vibrate) navigator.vibrate(ms); }
 
-/** ====== Base de produtos ====== */
+/** ====== Produtos / CSV ====== */
 let produtos = [];          // [{nome, caixasPorPallet, eans:[...]}]
 let mapaNome = new Map();   // nome -> objeto
-let mapaEAN  = new Map();   // ean (string de dígitos) -> objeto
+let mapaEAN  = new Map();   // ean -> objeto
 const MAX_LINHAS = 20;
 
 function detectDelimiter(line){ const c=(line.match(/,/g)||[]).length, s=(line.match(/;/g)||[]).length; return s>c?';':','; }
@@ -201,8 +201,6 @@ async function parseCSV(text){
     const cx = toNumber(r[iCx]);
     const eanField = (r[iEAN]||'').toString();
     if(!nome || !Number.isFinite(cx)) continue;
-
-    // Extrai possíveis EANs: 8–14 dígitos; aceita separadores | ; , espaço
     const eans = (eanField.match(/\d{8,14}/g) || []);
     out.push({nome, caixasPorPallet: cx, eans});
   }
@@ -213,17 +211,13 @@ async function carregarCSV(url){
   const res = await fetch(url + (url.includes('?')?'&':'?') + 'v=' + Date.now());
   if(!res.ok) throw new Error('HTTP ' + res.status);
   const txt = await res.text();
-  return parseCSV(txt);
-}
-
-function atualizarMapas(lista){
+  const lista = await parseCSV(txt);
   produtos = lista.sort((a,b)=>a.nome.localeCompare(b.nome,'pt-BR',{sensitivity:'base'}));
   mapaNome = new Map(produtos.map(p=>[p.nome,p]));
-  mapaEAN = new Map();
-  for(const p of produtos){ for(const e of p.eans){ mapaEAN.set(String(e), p); } }
+  mapaEAN = new Map(); for(const p of produtos){ for(const e of p.eans){ mapaEAN.set(String(e), p); } }
 }
 
-/** ====== Tabela / Linhas ====== */
+/** ====== Tabela ====== */
 function labelDiv(txt){ const d=document.createElement('div'); d.className='label'; d.textContent=txt; return d; }
 
 function criarLinha(){
@@ -328,19 +322,88 @@ let scanning = false;
 
 function sanitizeDigits(s){ return (s||'').toString().replace(/\D/g,''); }
 
+async function ensurePermissions(){
+  if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+    throw new Error('API de câmera não disponível. Abra no Chrome/Safari moderno e via HTTPS.');
+  }
+  // Solicita permissão (iOS só lista devices após isso)
+  const stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: false });
+  stream.getTracks().forEach(t => t.stop());
+}
+
+async function listCameras(){
+  try{
+    devices = await ZXing.BrowserMultiFormatReader.listVideoInputDevices();
+  }catch(e){
+    devices = [];
+  }
+}
+
 async function startScanner(){
   try{
+    await ensurePermissions();
     if(!codeReader) codeReader = new ZXing.BrowserMultiFormatReader();
-    devices = await ZXing.BrowserMultiFormatReader.listVideoInputDevices();
-    if(!devices.length){ toast('Nenhuma câmera encontrada'); return; }
-    // escolhe traseira se existir
-    const envIndex = devices.findIndex(d => /back|traseira|environment/i.test(d.label));
-    currentDeviceIndex = envIndex>-1 ? envIndex : (devices.length-1);
 
     byId('scanModal').classList.add('show');
     scanning = true;
-    decodeLoop();
-  }catch(e){ toast('Erro ao abrir câmera'); console.warn(e); }
+
+    // 1) Tenta usar facingMode environment (traseira)
+    await startDecodeWithConstraints({ video: { facingMode: { ideal: "environment" } } });
+    // Se o navegador ignorar, ainda assim vai abrir alguma câmera.
+
+    // Prepara lista para "Trocar câmera"
+    await listCameras();
+    const envIndex = devices.findIndex(d => /back|traseira|environment/i.test(d.label));
+    currentDeviceIndex = envIndex>-1 ? envIndex : 0;
+
+  }catch(e){
+    handleOpenError(e);
+  }
+}
+
+function handleOpenError(e){
+  console.warn('Erro ao abrir câmera', e);
+  const msg = (e && e.name) || '';
+  if (msg === 'NotAllowedError' || msg === 'SecurityError') {
+    toast('Permissão negada. Liberar acesso à câmera nas configurações do navegador.');
+  } else if (msg === 'NotFoundError' || msg === 'OverconstrainedError') {
+    toast('Nenhuma câmera disponível.');
+  } else if (msg === 'NotReadableError') {
+    toast('Câmera ocupada por outro app. Feche outros apps e tente de novo.');
+  } else {
+    toast('Erro ao abrir câmera');
+  }
+}
+
+async function startDecodeWithConstraints(constraints){
+  try{
+    await codeReader.decodeFromConstraints(constraints, 'preview', (result, err) => {
+      if(result && scanning){ handleDecoded(result.getText()); }
+    });
+  }catch(e){
+    // Fallback: tenta com device default
+    try{
+      await codeReader.decodeFromVideoDevice(null, 'preview', (result, err) => {
+        if(result && scanning){ handleDecoded(result.getText()); }
+      });
+    }catch(e2){
+      throw e2;
+    }
+  }
+}
+
+async function swapCamera(){
+  if(!codeReader) return;
+  await listCameras();
+  if(!devices.length){ toast('Sem outras câmeras'); return; }
+  currentDeviceIndex = (currentDeviceIndex + 1) % devices.length;
+  try{
+    await codeReader.decodeFromVideoDevice(devices[currentDeviceIndex].deviceId, 'preview', (result, err) => {
+      if(result && scanning){ handleDecoded(result.getText()); }
+    });
+  }catch(e){
+    toast('Falha ao trocar câmera'); console.warn(e);
+  }
 }
 
 function stopScanner(){
@@ -349,28 +412,21 @@ function stopScanner(){
   byId('scanModal').classList.remove('show');
 }
 
-async function swapCamera(){
-  if(!devices.length) return;
-  currentDeviceIndex = (currentDeviceIndex + 1) % devices.length;
-  if(scanning) decodeLoop();
-}
-
 function handleDecoded(text){
   const raw = (text||'').trim();
   const digits = sanitizeDigits(raw);
 
-  // 1) NF-e chave 44 dígitos (Code128/QR)
+  // 1) NF-e chave 44 dígitos
   if(digits.length === 44){
     beep(); vibrate();
-    toast('NF-e lida: chave ' + digits.slice(0,4) + '...' + digits.slice(-4));
-    return; // sem backend, seguimos escaneando EANs dos itens
+    toast('NF-e lida: ' + digits.slice(0,4) + '…' + digits.slice(-4));
+    return;
   }
 
-  // 2) Tenta EAN/GTIN (8–14 dígitos)
+  // 2) EAN/GTIN 8–14 dígitos
   const ean = (digits.length>=8 && digits.length<=14) ? digits : null;
   if(ean && mapaEAN.has(ean)){
     const p = mapaEAN.get(ean);
-    // Preenche a próxima linha vazia (sem bloquear repetição)
     const linhas = [...byId('tbody').querySelectorAll('tr')];
     const alvo = linhas.find(tr => tr.children[0].querySelector('select').value==='') || linhas[linhas.length-1];
     const sel = alvo.children[0].querySelector('select');
@@ -384,31 +440,16 @@ function handleDecoded(text){
   }
 }
 
-async function decodeLoop(){
-  try{
-    const deviceId = devices[currentDeviceIndex]?.deviceId;
-    await codeReader.decodeFromVideoDevice(deviceId, 'preview', (result, err) => {
-      if(result && scanning){
-        handleDecoded(result.getText());
-      }
-    });
-  }catch(e){
-    console.warn('decodeLoop error', e);
-    toast('Falha ao ler da câmera');
-  }
-}
-
-/** ====== Boot ====== */
 byId('btnScan').addEventListener('click', startScanner);
 byId('btnFecharScan').addEventListener('click', stopScanner);
 byId('btnSwapCam').addEventListener('click', swapCamera);
 byId('btnLimpar').addEventListener('click', ()=>{ montarLinhas(); atualizarTotais(); });
 
+/** ====== Boot ====== */
 (async function main(){
   montarLinhas();
   try{
-    const lista = await carregarCSV(CSV_PATH);
-    atualizarMapas(lista);
+    await carregarCSV(CSV_PATH);
     montarOpcoesSelect();
   }catch(e){ console.warn('Falha ao carregar CSV', e); }
 })();
