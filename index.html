@@ -5,39 +5,34 @@
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>Conferência de Pallets</title>
 
+<!-- ZXing para leitura de código de barras / QR -->
+<script src="https://unpkg.com/@zxing/library@0.19.1"></script>
+
 <style>
   :root{
     --bg:#0f172a; --panel:#111827; --muted:#94a3b8; --border:#1f2937;
     --white:#e5e7eb; --good:#22c55e; --warn:#f59e0b;
-    /* tons para zebra */
-    --row-dark:#0c1426;
-    --row-light:#141d31;
+    --row-dark:#0c1426; --row-light:#141d31;
+    --accent1:#0891b2; --accent2:#06b6d4;
   }
   html,body{height:100%}
-  body{
-    margin:0; background:linear-gradient(180deg, var(--bg), #000);
-    color:var(--white); font:500 15px/1.5 system-ui,-apple-system,"Segoe UI",Roboto,Ubuntu,Cantarell,"Helvetica Neue",Arial;
-  }
+  body{margin:0; background:linear-gradient(180deg, var(--bg), #000); color:var(--white);
+    font:500 15px/1.5 system-ui,-apple-system,"Segoe UI",Roboto,Ubuntu,Cantarell,"Helvetica Neue",Arial;}
   .wrap{max-width:1100px; margin:18px auto; padding:0 10px}
   .card{background:var(--panel); border:1px solid var(--border); border-radius:14px; box-shadow:0 10px 25px rgba(0,0,0,.25); overflow:hidden;}
   header{display:flex; align-items:center; justify-content:space-between; gap:10px; padding:12px 12px 6px 12px;}
   h1{font-size:18px; margin:0}
   .muted{color:var(--muted); font-weight:400}
   .btn{
-    appearance:none; border:1px solid var(--border); border-radius:10px; padding:7px 10px;
-    background:linear-gradient(90deg,#0891b2,#06b6d4); color:#001016; cursor:pointer; font-size:13px; font-weight:700;
+    appearance:none; border:1px solid var(--border); border-radius:10px; padding:7px 12px; font-size:13px; cursor:pointer;
+    color:#001016; background:linear-gradient(90deg,var(--accent1),var(--accent2)); font-weight:700;
   }
-  .input, select{
-    background:#0b1220; border:1px solid var(--border); border-radius:10px; color:var(--white);
-    padding:7px 9px; min-width:200px; font-size:13px;
-  }
+  .btn.secondary{background:#0b1220; color:var(--white); border-color:#2b3648}
+  .input, select{background:#0b1220; border:1px solid var(--border); border-radius:10px; color:var(--white); padding:7px 9px; min-width:200px; font-size:13px;}
   select{width:100%}
   table{width:100%; border-collapse:collapse}
-  thead th{
-    position:sticky; top:0; background:var(--panel);
-    text-align:left; font-weight:700; color:#cbd5e1; font-size:12px; text-transform:uppercase; letter-spacing:.06em;
-    border-bottom:1px solid var(--border); padding:8px 9px; z-index:1;
-  }
+  thead th{position:sticky; top:0; background:var(--panel); text-align:left; font-weight:700; color:#cbd5e1; font-size:12px;
+    text-transform:uppercase; letter-spacing:.06em; border-bottom:1px solid var(--border); padding:8px 9px; z-index:1;}
   tbody tr:nth-child(odd){ background:var(--row-dark) }
   tbody tr:nth-child(even){ background:var(--row-light) }
   tbody td{border-top:1px dashed #1b2233; padding:8px 9px; vertical-align:middle}
@@ -51,6 +46,22 @@
   tfoot td{border-top:2px solid var(--border); padding:9px}
   .right{text-align:right}
   .small{font-size:12px; color:var(--muted)}
+
+  /* ===== Scanner modal ===== */
+  .modal{position:fixed; inset:0; background:rgba(0,0,0,.75); display:none; align-items:center; justify-content:center; z-index:50}
+  .modal.show{display:flex}
+  .scanner{
+    width:min(640px,92vw); background:#0b1220; border:1px solid #263246; border-radius:16px; padding:12px; box-shadow:0 20px 60px rgba(0,0,0,.6)
+  }
+  .scanHead{display:flex; align-items:center; justify-content:space-between; gap:8px; padding:4px 4px 8px}
+  .scanHead h2{font-size:16px; margin:0}
+  .videoWrap{position:relative; border-radius:12px; overflow:hidden; border:1px solid #1e293b}
+  video{width:100%; height:auto; display:block; background:#000}
+  .reticle{position:absolute; inset:0; box-shadow:inset 0 0 0 2px rgba(34,211,238,.8); pointer-events:none}
+  .scanFooter{display:flex; gap:8px; justify-content:flex-end; padding-top:8px}
+  .toast{position:fixed; left:50%; transform:translateX(-50%); bottom:16px; background:#0b1220; border:1px solid #334155;
+    color:#e2e8f0; padding:8px 12px; border-radius:10px; font-size:13px; z-index:60; display:none}
+  .toast.show{display:block}
 
   /* Compacto */
   @media (max-width:768px){
@@ -72,7 +83,7 @@
     tbody td .label{display:block; font-size:11px; color:#93a4bd; margin-bottom:4px; text-transform:uppercase; letter-spacing:.04em}
     .number{width:100%}
     .flex{gap:4px}
-    td[data-col="detalhe"]{display:none} /* esconde coluna de detalhe no mobile para caber */
+    td[data-col="detalhe"]{display:none}
     tfoot tr{display:grid; grid-template-columns:1fr 1fr; gap:6px; padding:8px}
     tfoot td{border:none; padding:6px}
     .right{text-align:left}
@@ -87,10 +98,11 @@
           <h1>Conferência de Pallets</h1>
           <div class="muted">Selecione até 20 produtos e informe a quantidade da nota.</div>
         </div>
-        <button class="btn" id="btnLimpar">Limpar</button>
+        <div style="display:flex; gap:8px">
+          <button class="btn secondary" id="btnScan">Escanear</button>
+          <button class="btn" id="btnLimpar">Limpar</button>
+        </div>
       </header>
-
-      <!-- Toolbar e banners REMOVIDOS/OCULTOS conforme solicitado -->
 
       <div style="padding:0 12px 8px 12px" class="small">
         <span class="pill">Regra</span> Pallets = <strong>Qtd. da Nota ÷ Caixas/Pallet</strong>.
@@ -122,89 +134,129 @@
     </div>
   </div>
 
+  <!-- Modal do Scanner -->
+  <div class="modal" id="scanModal" aria-hidden="true">
+    <div class="scanner">
+      <div class="scanHead">
+        <h2>Escanear código</h2>
+        <div style="display:flex; gap:8px">
+          <button class="btn secondary" id="btnSwapCam">Trocar câmera</button>
+          <button class="btn" id="btnFecharScan">Fechar</button>
+        </div>
+      </div>
+      <div class="videoWrap">
+        <video id="preview" autoplay playsinline></video>
+        <div class="reticle"></div>
+      </div>
+      <div class="scanFooter">
+        <div class="small muted">Aponte para o QR/Code128 da NF (chave 44) ou para o EAN do produto.</div>
+      </div>
+    </div>
+  </div>
+
+  <div id="toast" class="toast"></div>
+
 <script>
-/* =================== CONFIG =================== */
-/* Caminho fixo do CSV no GitHub Pages (ajuste se necessário) */
+/** ====== CONFIG: troque se precisar usar outro caminho do CSV ====== */
 const CSV_PATH = 'https://logisticaincobel.github.io/confersku/produtos.csv';
 
-/* =================== Utilidades =================== */
+/** ====== Utilidades UI ====== */
 const byId = id => document.getElementById(id);
 const fmt = n => Number.isFinite(n) ? n.toLocaleString('pt-BR', {maximumFractionDigits:2}) : '';
 const toNumber = v => (v===0||v) ? Number(String(v).replace(/\uFEFF/g,'').replace(/\./g,'').replace(',', '.')) : NaN;
+function toast(msg, ms=1600){ const t=byId('toast'); t.textContent=msg; t.classList.add('show'); setTimeout(()=>t.classList.remove('show'), ms); }
+function beep(){ try{const ctx=new (window.AudioContext||window.webkitAudioContext)(); const o=ctx.createOscillator(); const g=ctx.createGain(); o.connect(g); g.connect(ctx.destination); o.type='sine'; o.frequency.value=880; o.start(); g.gain.exponentialRampToValueAtTime(0.00001, ctx.currentTime+0.18); setTimeout(()=>ctx.close(),220);}catch{} }
+function vibrate(ms=80){ if(navigator.vibrate) navigator.vibrate(ms); }
 
-/* =================== CSV =================== */
-let produtos = [];              // [{nome, caixasPorPallet}]
-let mapa = new Map();           // nome -> caixasPorPallet
+/** ====== Base de produtos ====== */
+let produtos = [];          // [{nome, caixasPorPallet, eans:[...]}]
+let mapaNome = new Map();   // nome -> objeto
+let mapaEAN  = new Map();   // ean (string de dígitos) -> objeto
 const MAX_LINHAS = 20;
 
-function detectDelimiter(line){
-  const c = (line.match(/,/g)||[]).length, s=(line.match(/;/g)||[]).length;
-  return s>c?';':',';
+function detectDelimiter(line){ const c=(line.match(/,/g)||[]).length, s=(line.match(/;/g)||[]).length; return s>c?';':','; }
+
+function pickIndexes(headers){
+  const norm = headers.map(h => (h||'').toString().trim().toLowerCase());
+  const iNome = norm.findIndex(h => /produto|descri/i.test(h));
+  const iCx   = norm.findIndex(h => /(caix|cx).*pallet|pallet.*caix|caixasporpallet|cx\/pal/i.test(h)) !== -1
+    ? norm.findIndex(h => /(caix|cx).*pallet|pallet.*caix|caixasporpallet|cx\/pal/i.test(h))
+    : norm.findIndex(h => /(caix|cx)/i.test(h));
+  const iEAN  = norm.findIndex(h => /ean|gtin|c\u00f3d|cod.*barra|codigo.*barra/i.test(h));
+  return {iNome: iNome>-1?iNome:0, iCx: iCx>-1?iCx:1, iEAN: iEAN>-1?iEAN:2};
 }
-async function carregarCSVTexto(csvText){
-  const linhas = csvText.replace(/^\uFEFF/, '').split(/\r?\n/).map(l=>l.trim()).filter(Boolean);
-  if (!linhas.length) return [];
+
+async function parseCSV(text){
+  const linhas = text.replace(/^\uFEFF/, '').split(/\r?\n/).filter(l=>l.trim().length);
+  if(!linhas.length) return [];
   const delim = detectDelimiter(linhas[0]);
-  const out = [];
-  for (let i=0;i<linhas.length;i++){
-    const parts = linhas[i]
-      .split(new RegExp(`${delim}(?![^"]*"(?:(?:[^"]*"){2})*[^"]*$)`))
-      .map(s => s.replace(/^"|"$/g,'').trim());
-    if (i===0 && (parts[0]||'').toLowerCase().includes('produto')) continue;
-    if (parts.length<2) continue;
-    const nome = parts[0];
-    const caixas = toNumber(parts[1]);
-    if (!nome || !Number.isFinite(caixas)) continue;
-    out.push({nome, caixasPorPallet: caixas});
+  const rowToArr = l => l.split(new RegExp(`${delim}(?![^"]*"(?:(?:[^"]*"){2})*[^"]*$)`)).map(s=>s.replace(/^"|"$/g,'').trim());
+  const head = rowToArr(linhas[0]);
+  const {iNome,iCx,iEAN} = pickIndexes(head);
+
+  const out=[];
+  for(let i=1;i<linhas.length;i++){
+    const r = rowToArr(linhas[i]);
+    const nome = r[iNome]||'';
+    const cx = toNumber(r[iCx]);
+    const eanField = (r[iEAN]||'').toString();
+    if(!nome || !Number.isFinite(cx)) continue;
+
+    // Extrai possíveis EANs: 8–14 dígitos; aceita separadores | ; , espaço
+    const eans = (eanField.match(/\d{8,14}/g) || []);
+    out.push({nome, caixasPorPallet: cx, eans});
   }
   return out;
 }
-async function carregarDeURL(url){
-  const res = await fetch(url + (url.includes('?')?'&':'?') + 'v=' + Date.now()); // cache bust
-  if (!res.ok) throw new Error('HTTP ' + res.status);
-  const text = await res.text();
-  return carregarCSVTexto(text);
+
+async function carregarCSV(url){
+  const res = await fetch(url + (url.includes('?')?'&':'?') + 'v=' + Date.now());
+  if(!res.ok) throw new Error('HTTP ' + res.status);
+  const txt = await res.text();
+  return parseCSV(txt);
 }
 
-/* =================== UI =================== */
+function atualizarMapas(lista){
+  produtos = lista.sort((a,b)=>a.nome.localeCompare(b.nome,'pt-BR',{sensitivity:'base'}));
+  mapaNome = new Map(produtos.map(p=>[p.nome,p]));
+  mapaEAN = new Map();
+  for(const p of produtos){ for(const e of p.eans){ mapaEAN.set(String(e), p); } }
+}
+
+/** ====== Tabela / Linhas ====== */
 function labelDiv(txt){ const d=document.createElement('div'); d.className='label'; d.textContent=txt; return d; }
 
-function criarLinha(i){
+function criarLinha(){
   const tr = document.createElement('tr');
 
   const tdProduto = document.createElement('td');
   tdProduto.appendChild(labelDiv('Produto'));
-  const sel = document.createElement('select');
-  sel.className = 'input'; tdProduto.appendChild(sel);
+  const sel = document.createElement('select'); sel.className='input'; tdProduto.appendChild(sel);
 
   const tdCx = document.createElement('td'); tdCx.className='right';
   tdCx.appendChild(labelDiv('Caixas/Pallet'));
-  const cx = document.createElement('input'); cx.className='readonly number'; cx.readOnly=true; cx.placeholder='—';
-  tdCx.appendChild(cx);
+  const cx = document.createElement('input'); cx.className='readonly number'; cx.readOnly=true; cx.placeholder='—'; tdCx.appendChild(cx);
 
   const tdQtd = document.createElement('td'); tdQtd.className='right';
   tdQtd.appendChild(labelDiv('Qtd. da Nota'));
-  const qtd = document.createElement('input'); qtd.type='number'; qtd.min='0'; qtd.step='1'; qtd.className='input number'; qtd.placeholder='0';
-  tdQtd.appendChild(qtd);
+  const qtd = document.createElement('input'); qtd.type='number'; qtd.min='0'; qtd.step='1'; qtd.className='input number'; qtd.placeholder='0'; tdQtd.appendChild(qtd);
 
   const tdPal = document.createElement('td'); tdPal.className='right';
   tdPal.appendChild(labelDiv('Pallets (total)'));
-  const pal = document.createElement('div'); pal.className='readonly number'; pal.style.textAlign='right';
-  tdPal.appendChild(pal);
+  const pal = document.createElement('div'); pal.className='readonly number'; pal.style.textAlign='right'; tdPal.appendChild(pal);
 
   const tdDet = document.createElement('td'); tdDet.dataset.col='detalhe';
   tdDet.appendChild(labelDiv('Detalhe'));
-  const detalhes = document.createElement('div'); detalhes.className='flex';
+  const det = document.createElement('div'); det.className='flex';
   const pillCheios = document.createElement('span'); pillCheios.className='pill';
   const pillResto = document.createElement('span'); pillResto.className='pill';
-  detalhes.appendChild(pillCheios); detalhes.appendChild(pillResto);
-  tdDet.appendChild(detalhes);
+  det.append(pillCheios, pillResto); tdDet.appendChild(det);
 
   tr.append(tdProduto, tdCx, tdQtd, tdPal, tdDet);
 
   sel.addEventListener('change', ()=>{
-    const nome = sel.value;
-    if (mapa.has(nome)){ cx.value = fmt(mapa.get(nome)); if (!qtd.value) qtd.focus(); }
+    const p = mapaNome.get(sel.value);
+    if(p){ cx.value = fmt(p.caixasPorPallet); if(!qtd.value) qtd.focus(); }
     else { cx.value=''; }
     recalcular();
   });
@@ -212,13 +264,15 @@ function criarLinha(i){
 
   function recalcular(){
     const c = toNumber(cx.value), q = toNumber(qtd.value);
-    if (Number.isFinite(c) && c>0 && Number.isFinite(q) && q>=0){
+    if(Number.isFinite(c) && c>0 && Number.isFinite(q) && q>=0){
       const total = q/c; pal.textContent = fmt(total);
-      const cheios = Math.floor(total); const resto = q - cheios*c;
-      pillCheios.textContent = cheios+' cheio(s)'; pillResto.textContent = resto+' caixa(s) resto';
-      const cls = 'pill ' + (resto===0?'good':'warn'); pillCheios.className=cls; pillResto.className=cls;
-    }else{
-      pal.textContent=''; pillCheios.textContent='—'; pillResto.textContent='—'; pillCheios.className='pill'; pillResto.className='pill';
+      const cheios = Math.floor(total), resto = q - cheios*c;
+      const cls = 'pill ' + (resto===0?'good':'warn');
+      pillCheios.textContent = cheios + ' cheio(s)'; pillResto.textContent = resto + ' caixa(s) resto';
+      pillCheios.className = cls; pillResto.className = cls;
+    } else {
+      pal.textContent=''; pillCheios.textContent='—'; pillResto.textContent='—';
+      pillCheios.className='pill'; pillResto.className='pill';
     }
     atualizarTotais();
   }
@@ -228,36 +282,36 @@ function criarLinha(i){
 
 function montarLinhas(){
   const tbody = byId('tbody'); tbody.innerHTML='';
-  for (let i=0;i<MAX_LINHAS;i++) tbody.appendChild(criarLinha(i+1));
+  for(let i=0;i<MAX_LINHAS;i++) tbody.appendChild(criarLinha());
   montarOpcoesSelect();
 }
 
 function montarOpcoesSelect(){
   const selects = byId('tbody').querySelectorAll('select');
-  for (const sel of selects){
+  for(const sel of selects){
     const prev = sel.value;
     sel.innerHTML='';
     const opt0 = document.createElement('option');
     opt0.value=''; opt0.textContent = produtos.length?'Selecione um produto…':'Carregando base…'; opt0.disabled=true; opt0.selected=true;
     sel.appendChild(opt0);
-    for (const p of produtos){
+    for(const p of produtos){
       const o=document.createElement('option'); o.value=p.nome; o.textContent=p.nome; sel.appendChild(o);
     }
-    if (prev && mapa.has(prev)){ sel.value=prev; sel.dispatchEvent(new Event('change')); }
+    if(prev && mapaNome.has(prev)){ sel.value=prev; sel.dispatchEvent(new Event('change')); }
   }
 }
 
 function atualizarTotais(){
   const linhas = [...byId('tbody').querySelectorAll('tr')];
   let totalNota=0, totalPallets=0, totalCheios=0, totalResto=0;
-  for (const tr of linhas){
+  for(const tr of linhas){
     const caixas = toNumber(tr.children[1].querySelector('input').value);
-    const qtd = toNumber(tr.children[2].querySelector('input').value);
-    if (!Number.isFinite(qtd)) continue;
+    const qtd    = toNumber(tr.children[2].querySelector('input').value);
+    if(!Number.isFinite(qtd)) continue;
     totalNota += qtd;
-    if (Number.isFinite(caixas) && caixas>0){
+    if(Number.isFinite(caixas) && caixas>0){
       const total = qtd/caixas; totalPallets += total;
-      const cheios = Math.floor(total); const resto = qtd - cheios*caixas;
+      const cheios = Math.floor(total), resto = qtd - cheios*caixas;
       totalCheios += cheios; totalResto += resto;
     }
   }
@@ -266,21 +320,98 @@ function atualizarTotais(){
   byId('resumoCheiosResto').textContent = `${fmt(totalCheios)} cheio(s) • ${fmt(totalResto)} caixa(s) de resto`;
 }
 
-/* =================== Boot =================== */
-async function main(){
-  montarLinhas();
+/** ====== Scanner (ZXing) ====== */
+let codeReader = null;
+let devices = [];
+let currentDeviceIndex = 0;
+let scanning = false;
+
+function sanitizeDigits(s){ return (s||'').toString().replace(/\D/g,''); }
+
+async function startScanner(){
   try{
-    const lista = await carregarDeURL(CSV_PATH);
-    produtos = lista.sort((a,b)=>a.nome.localeCompare(b.nome,'pt-BR',{sensitivity:'base'}));
-    mapa = new Map(produtos.map(p=>[p.nome,p.caixasPorPallet]));
-    montarOpcoesSelect();
-  }catch(e){
-    console.warn('Falha ao carregar CSV:', e);
-    // silencioso, conforme solicitado (sem banners/avisos)
+    if(!codeReader) codeReader = new ZXing.BrowserMultiFormatReader();
+    devices = await ZXing.BrowserMultiFormatReader.listVideoInputDevices();
+    if(!devices.length){ toast('Nenhuma câmera encontrada'); return; }
+    // escolhe traseira se existir
+    const envIndex = devices.findIndex(d => /back|traseira|environment/i.test(d.label));
+    currentDeviceIndex = envIndex>-1 ? envIndex : (devices.length-1);
+
+    byId('scanModal').classList.add('show');
+    scanning = true;
+    decodeLoop();
+  }catch(e){ toast('Erro ao abrir câmera'); console.warn(e); }
+}
+
+function stopScanner(){
+  scanning = false;
+  try{ codeReader && codeReader.reset(); }catch{}
+  byId('scanModal').classList.remove('show');
+}
+
+async function swapCamera(){
+  if(!devices.length) return;
+  currentDeviceIndex = (currentDeviceIndex + 1) % devices.length;
+  if(scanning) decodeLoop();
+}
+
+function handleDecoded(text){
+  const raw = (text||'').trim();
+  const digits = sanitizeDigits(raw);
+
+  // 1) NF-e chave 44 dígitos (Code128/QR)
+  if(digits.length === 44){
+    beep(); vibrate();
+    toast('NF-e lida: chave ' + digits.slice(0,4) + '...' + digits.slice(-4));
+    return; // sem backend, seguimos escaneando EANs dos itens
+  }
+
+  // 2) Tenta EAN/GTIN (8–14 dígitos)
+  const ean = (digits.length>=8 && digits.length<=14) ? digits : null;
+  if(ean && mapaEAN.has(ean)){
+    const p = mapaEAN.get(ean);
+    // Preenche a próxima linha vazia (sem bloquear repetição)
+    const linhas = [...byId('tbody').querySelectorAll('tr')];
+    const alvo = linhas.find(tr => tr.children[0].querySelector('select').value==='') || linhas[linhas.length-1];
+    const sel = alvo.children[0].querySelector('select');
+    sel.value = p.nome;
+    sel.dispatchEvent(new Event('change'));
+    alvo.children[2].querySelector('input').focus();
+    beep(); vibrate();
+    toast('Produto: ' + p.nome);
+  } else {
+    toast('Código não encontrado na base');
   }
 }
+
+async function decodeLoop(){
+  try{
+    const deviceId = devices[currentDeviceIndex]?.deviceId;
+    await codeReader.decodeFromVideoDevice(deviceId, 'preview', (result, err) => {
+      if(result && scanning){
+        handleDecoded(result.getText());
+      }
+    });
+  }catch(e){
+    console.warn('decodeLoop error', e);
+    toast('Falha ao ler da câmera');
+  }
+}
+
+/** ====== Boot ====== */
+byId('btnScan').addEventListener('click', startScanner);
+byId('btnFecharScan').addEventListener('click', stopScanner);
+byId('btnSwapCam').addEventListener('click', swapCamera);
 byId('btnLimpar').addEventListener('click', ()=>{ montarLinhas(); atualizarTotais(); });
-main();
+
+(async function main(){
+  montarLinhas();
+  try{
+    const lista = await carregarCSV(CSV_PATH);
+    atualizarMapas(lista);
+    montarOpcoesSelect();
+  }catch(e){ console.warn('Falha ao carregar CSV', e); }
+})();
 </script>
 </body>
 </html>
