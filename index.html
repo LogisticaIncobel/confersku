@@ -1,0 +1,377 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Conferência de Pallets</title>
+
+<!-- SheetJS para suportar XLSX opcionalmente (se não quiser usar, remova este script) -->
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+
+<style>
+  :root{
+    --bg:#0f172a;         /* azul marinho escuro */
+    --panel:#111827;
+    --muted:#94a3b8;
+    --border:#1f2937;
+    --accent:#22d3ee;
+    --good:#22c55e;
+    --warn:#f59e0b;
+    --bad:#ef4444;
+    --white:#e5e7eb;
+  }
+  html,body{height:100%}
+  body{
+    margin:0; background:linear-gradient(180deg, var(--bg), #000);
+    color:var(--white); font:500 15px/1.5 system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, Cantarell, "Helvetica Neue", Arial;
+    letter-spacing:.2px;
+  }
+  .wrap{max-width:1200px; margin:32px auto; padding:0 16px}
+  .card{
+    background:var(--panel); border:1px solid var(--border);
+    border-radius:16px; box-shadow:0 10px 25px rgba(0,0,0,.25);
+    overflow:hidden;
+  }
+  header{
+    display:flex; align-items:center; justify-content:space-between;
+    gap:16px; padding:20px 20px 8px 20px;
+  }
+  h1{font-size:22px; margin:0}
+  .muted{color:var(--muted); font-weight:400}
+  .toolbar{
+    display:flex; flex-wrap:wrap; gap:8px; align-items:center; padding:0 20px 16px 20px;
+  }
+  .btn, .file{
+    appearance:none; border:1px solid var(--border); border-radius:10px; padding:10px 14px;
+    background:#0b1220; color:var(--white); cursor:pointer;
+  }
+  .btn:hover{border-color:#2b3648}
+  .btn.accent{border-color:transparent; background:linear-gradient(90deg, #0891b2, #06b6d4); color:#001016; font-weight:700}
+  .input{
+    background:#0b1220; border:1px solid var(--border); border-radius:10px; color:var(--white);
+    padding:10px 12px; min-width:220px;
+  }
+  .hint{font-size:12px; color:var(--muted); margin-left:4px}
+  table{width:100%; border-collapse:collapse}
+  thead th{
+    text-align:left; font-weight:700; color:#cbd5e1; font-size:13px; text-transform:uppercase; letter-spacing:.06em;
+    border-bottom:1px solid var(--border); padding:14px 12px;
+  }
+  tbody td{border-top:1px dashed #1b2233; padding:10px 12px; vertical-align:middle}
+  tbody tr:hover{background:#0c1426}
+  .number{width:120px}
+  .readonly{background:#0a1323; border:1px solid #192234; color:#cbd5e1; border-radius:8px; padding:9px 10px}
+  .flex{display:flex; gap:8px; align-items:center}
+  .pill{padding:6px 10px; border-radius:999px; font-size:12px; border:1px solid var(--border); background:#0b1220}
+  .pill.good{border-color:rgba(34,197,94,.35); color:var(--good)}
+  .pill.warn{border-color:rgba(245,158,11,.35); color:var(--warn)}
+  .pill.bad{border-color:rgba(239,68,68,.35); color:var(--bad)}
+  tfoot td{border-top:2px solid var(--border); padding:14px 12px}
+  .right{text-align:right}
+  .grid2{display:grid; grid-template-columns:1fr auto; gap:8px; align-items:center}
+  .small{font-size:12px; color:var(--muted)}
+  .footnote{padding:12px 20px 20px 20px}
+  @media (max-width:880px){
+    .number{width:110px}
+  }
+</style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="card">
+      <header>
+        <div>
+          <h1>Conferência de Pallets</h1>
+          <div class="muted">Escolha até 20 produtos, informe a quantidade da nota e veja os pallets calculados automaticamente.</div>
+        </div>
+        <button class="btn accent" id="btnLimpar">Limpar tudo</button>
+      </header>
+
+      <div class="toolbar">
+        <div class="grid2" style="min-width:320px">
+          <input id="urlCSV" class="input" placeholder="Caminho do produtos.csv (opcional)" />
+          <button class="btn" id="btnCarregarURL">Carregar CSV</button>
+        </div>
+        <div class="grid2" style="min-width:320px">
+          <input type="file" id="filePicker" class="file" accept=".csv,.xlsx,.xls" />
+          <span class="hint">Anexe seu CSV/XLSX ou coloque <code>produtos.csv</code> na mesma pasta.</span>
+        </div>
+      </div>
+
+      <div style="padding:0 20px 12px 20px" class="small">
+        <span class="pill">Regra de cálculo</span> Pallets = <strong>Quantidade da Nota ÷ Caixas/Pallet</strong>.
+        Também mostramos <em>pallets cheios</em> e <em>caixas restantes</em>.
+      </div>
+
+      <div style="overflow:auto">
+        <table id="tabela">
+          <thead>
+            <tr>
+              <th style="min-width:360px">Produto</th>
+              <th class="right number">Caixas por Pallet</th>
+              <th class="right number">Qtd. da Nota</th>
+              <th class="right number">Pallets (total)</th>
+              <th style="min-width:220px">Detalhe</th>
+            </tr>
+          </thead>
+          <tbody id="tbody"></tbody>
+          <tfoot>
+            <tr>
+              <td class="right"><strong>Totais:</strong></td>
+              <td class="right"><span id="totalCaixasPallet" class="small muted">—</span></td>
+              <td class="right"><strong id="totalCaixasNota">0</strong></td>
+              <td class="right"><strong id="totalPallets">0</strong></td>
+              <td class="right"><span id="resumoCheiosResto" class="small muted">—</span></td>
+            </tr>
+          </tfoot>
+        </table>
+      </div>
+
+      <div class="footnote small">
+        Dica: mantenha um arquivo <code>produtos.csv</code> com cabeçalho <code>Produto,CaixasPorPallet</code> no mesmo diretório desta página para carregar automaticamente na abertura.
+      </div>
+    </div>
+  </div>
+
+<script>
+/** ================== Utilidades =================== */
+const byId = id => document.getElementById(id);
+const fmt = n => Number.isFinite(n) ? n.toLocaleString('pt-BR', {maximumFractionDigits: 2}) : '';
+const toNumber = v => {
+  if (typeof v === 'number') return v;
+  if (!v) return NaN;
+  return Number(String(v).replace(/\./g,'').replace(',', '.'));
+};
+const sleep = ms => new Promise(r => setTimeout(r, ms));
+
+/** ================== Base de produtos =================== */
+let produtos = []; // [{nome, caixasPorPallet}]
+let mapa = new Map(); // nome -> caixasPorPallet
+const MAX_LINHAS = 20;
+
+async function carregarCSVTexto(csvText){
+  const linhas = csvText.split(/\r?\n/).map(l=>l.trim()).filter(Boolean);
+  const out = [];
+  for (let i=0;i<linhas.length;i++){
+    // Suporta vírgula como separador; ignora aspas simples
+    const parts = linhas[i].split(/,(?![^"]*"(?:(?:[^"]*"){2})*[^"]*$)/).map(s => s.replace(/^"|"$/g,'').trim());
+    if (i===0 && parts[0].toLowerCase().includes('produto')) continue; // ignora cabeçalho
+    if (parts.length < 2) continue;
+    const nome = parts[0];
+    const caixas = toNumber(parts[1]);
+    if (!nome || !Number.isFinite(caixas)) continue;
+    out.push({nome, caixasPorPallet: caixas});
+  }
+  return out;
+}
+
+async function carregarDeURL(url){
+  const res = await fetch(url);
+  if (!res.ok) throw new Error('Não foi possível baixar o arquivo.');
+  const text = await res.text();
+  return await carregarCSVTexto(text);
+}
+
+async function carregarDeArquivo(arquivo){
+  const nome = arquivo.name.toLowerCase();
+  if (nome.endsWith('.csv')){
+    const text = await arquivo.text();
+    return await carregarCSVTexto(text);
+  } else {
+    // XLSX via SheetJS
+    const data = await arquivo.arrayBuffer();
+    const wb = XLSX.read(data, {type:'array'});
+    const ws = wb.Sheets[wb.SheetNames[0]];
+    const rows = XLSX.utils.sheet_to_json(ws, {header:1, raw:false, defval:''});
+    const csv = rows.map(r => r.map(x => String(x)).join(',')).join('\n');
+    return await carregarCSVTexto(csv);
+  }
+}
+
+function atualizarMapa(prodList){
+  produtos = prodList.sort((a,b)=>a.nome.localeCompare(b.nome,'pt-BR',{sensitivity:'base'}));
+  mapa = new Map(produtos.map(p=>[p.nome, p.caixasPorPallet]));
+}
+
+/** ================== UI: Linhas e cálculos =================== */
+function criarLinha(index){
+  const tr = document.createElement('tr');
+
+  // Produto (input + datalist)
+  const tdProduto = document.createElement('td');
+  const inputProduto = document.createElement('input');
+  inputProduto.setAttribute('list', 'listaProdutos');
+  inputProduto.placeholder = 'Selecione ou digite o nome do produto';
+  inputProduto.className = 'input';
+  inputProduto.autocomplete = 'off';
+  inputProduto.dataset.idx = index;
+  tdProduto.appendChild(inputProduto);
+
+  // Caixas por pallet (readonly)
+  const tdCaixas = document.createElement('td'); tdCaixas.className = 'right';
+  const caixas = document.createElement('input');
+  caixas.type = 'text'; caixas.readOnly = true; caixas.className = 'readonly number';
+  caixas.placeholder = '—';
+  tdCaixas.appendChild(caixas);
+
+  // Qtd da nota (digitável)
+  const tdQtd = document.createElement('td'); tdQtd.className = 'right';
+  const qtd = document.createElement('input');
+  qtd.type = 'number'; qtd.min = '0'; qtd.step = '1'; qtd.className = 'input number';
+  qtd.placeholder = '0';
+  tdQtd.appendChild(qtd);
+
+  // Pallets (total)
+  const tdPallets = document.createElement('td'); tdPallets.className = 'right';
+  const pallets = document.createElement('div');
+  pallets.className = 'readonly number'; pallets.style.textAlign='right';
+  pallets.textContent = '';
+  tdPallets.appendChild(pallets);
+
+  // Detalhe (cheios + resto)
+  const tdDetalhe = document.createElement('td');
+  const detalhe = document.createElement('div'); detalhe.className='flex';
+  const pillCheios = document.createElement('span'); pillCheios.className='pill';
+  const pillResto = document.createElement('span'); pillResto.className='pill';
+  detalhe.appendChild(pillCheios); detalhe.appendChild(pillResto);
+  tdDetalhe.appendChild(detalhe);
+
+  tr.appendChild(tdProduto); tr.appendChild(tdCaixas); tr.appendChild(tdQtd); tr.appendChild(tdPallets); tr.appendChild(tdDetalhe);
+
+  // Eventos
+  inputProduto.addEventListener('change', ()=>{
+    const nome = inputProduto.value.trim();
+    if (mapa.has(nome)){
+      const cx = mapa.get(nome);
+      caixas.value = fmt(cx);
+      if (!qtd.value) qtd.focus();
+    } else {
+      caixas.value = '';
+    }
+    recalcular();
+  });
+  qtd.addEventListener('input', ()=> recalcular());
+
+  function recalcular(){
+    const cx = toNumber(caixas.value);
+    const q = toNumber(qtd.value);
+    if (Number.isFinite(cx) && cx>0 && Number.isFinite(q) && q>=0){
+      const total = q / cx;
+      pallets.textContent = fmt(total);
+      const cheios = Math.floor(total);
+      const restoCaixas = q - cheios*cx;
+      pillCheios.textContent = cheios+' pallet(s) cheio(s)';
+      pillResto.textContent = (restoCaixas)+' caixa(s) resto';
+      pillCheios.className = 'pill ' + (restoCaixas===0 ? 'good':'warn');
+      pillResto.className  = 'pill ' + (restoCaixas===0 ? 'good':'warn');
+    } else {
+      pallets.textContent = '';
+      pillCheios.textContent = '—';
+      pillResto.textContent = '—';
+      pillCheios.className='pill';
+      pillResto.className='pill';
+    }
+    atualizarTotais();
+  }
+
+  return tr;
+}
+
+function montarLinhas(){
+  const tbody = byId('tbody');
+  tbody.innerHTML = '';
+  for (let i=0;i<MAX_LINHAS;i++){
+    tbody.appendChild(criarLinha(i+1));
+  }
+}
+
+function montarDatalist(){
+  // Remove antigo se existir
+  let dl = document.getElementById('listaProdutos');
+  if (dl) dl.remove();
+  dl = document.createElement('datalist');
+  dl.id = 'listaProdutos';
+  for (const p of produtos){
+    const opt = document.createElement('option');
+    opt.value = p.nome;
+    dl.appendChild(opt);
+  }
+  document.body.appendChild(dl);
+}
+
+function atualizarTotais(){
+  const linhas = [...byId('tbody').querySelectorAll('tr')];
+  let totalNota = 0;
+  let totalPallets = 0;
+  let totalCheios = 0;
+  let totalRestoCx = 0;
+
+  for (const tr of linhas){
+    const caixas = toNumber(tr.children[1].querySelector('input').value);
+    const qtd = toNumber(tr.children[2].querySelector('input').value);
+    if (!Number.isFinite(qtd)) continue;
+    totalNota += qtd;
+    if (Number.isFinite(caixas) && caixas>0){
+      const total = qtd / caixas;
+      totalPallets += total;
+      const cheios = Math.floor(total);
+      const resto = qtd - cheios*caixas;
+      totalCheios += cheios;
+      totalRestoCx += resto;
+    }
+  }
+  byId('totalCaixasNota').textContent = fmt(totalNota);
+  byId('totalPallets').textContent = fmt(totalPallets);
+  byId('resumoCheiosResto').textContent = `${fmt(totalCheios)} pallet(s) cheio(s) • ${fmt(totalRestoCx)} caixa(s) de resto`;
+}
+
+/** ================== Carregamento inicial =================== */
+async function tentarCarregarAutomatico(){
+  try{
+    const lista = await carregarDeURL('produtos.csv');
+    atualizarMapa(lista);
+    montarDatalist();
+  }catch(e){
+    // Silencioso se não encontrar
+  }
+}
+
+byId('btnCarregarURL').addEventListener('click', async ()=>{
+  const url = byId('urlCSV').value.trim();
+  if (!url) { alert('Informe a URL/caminho do CSV.'); return; }
+  try{
+    const lista = await carregarDeURL(url);
+    atualizarMapa(lista);
+    montarDatalist();
+    alert('Base carregada com sucesso!');
+  }catch(e){
+    alert('Falha ao carregar: ' + e.message);
+  }
+});
+
+byId('filePicker').addEventListener('change', async (ev)=>{
+  const file = ev.target.files?.[0];
+  if (!file) return;
+  try{
+    const lista = await carregarDeArquivo(file);
+    atualizarMapa(lista);
+    montarDatalist();
+    alert('Base carregada com sucesso!');
+  }catch(e){
+    alert('Falha ao ler arquivo: ' + e.message);
+  }
+});
+
+byId('btnLimpar').addEventListener('click', ()=>{
+  montarLinhas();
+  atualizarTotais();
+});
+
+(async function main(){
+  montarLinhas();
+  await tentarCarregarAutomatico();
+  montarDatalist();
+})();
+</script>
+</body>
+</html>
