@@ -5,58 +5,38 @@
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>Conferência de Pallets</title>
 
-<!-- SheetJS para suportar XLSX opcionalmente (se não quiser usar, remova este script) -->
+<!-- SheetJS opcional para XLSX -->
 <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 
 <style>
   :root{
-    --bg:#0f172a;         /* azul marinho escuro */
-    --panel:#111827;
-    --muted:#94a3b8;
-    --border:#1f2937;
-    --accent:#22d3ee;
-    --good:#22c55e;
-    --warn:#f59e0b;
-    --bad:#ef4444;
-    --white:#e5e7eb;
+    --bg:#0f172a; --panel:#111827; --muted:#94a3b8; --border:#1f2937;
+    --accent:#22d3ee; --good:#22c55e; --warn:#f59e0b; --bad:#ef4444; --white:#e5e7eb;
   }
   html,body{height:100%}
-  body{
-    margin:0; background:linear-gradient(180deg, var(--bg), #000);
-    color:var(--white); font:500 15px/1.5 system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, Cantarell, "Helvetica Neue", Arial;
-    letter-spacing:.2px;
-  }
+  body{margin:0; background:linear-gradient(180deg, var(--bg), #000);
+    color:var(--white); font:500 15px/1.5 system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, Cantarell, "Helvetica Neue", Arial;}
   .wrap{max-width:1200px; margin:32px auto; padding:0 16px}
-  .card{
-    background:var(--panel); border:1px solid var(--border);
-    border-radius:16px; box-shadow:0 10px 25px rgba(0,0,0,.25);
-    overflow:hidden;
-  }
-  header{
-    display:flex; align-items:center; justify-content:space-between;
-    gap:16px; padding:20px 20px 8px 20px;
-  }
+  .card{background:var(--panel); border:1px solid var(--border); border-radius:16px; box-shadow:0 10px 25px rgba(0,0,0,.25); overflow:hidden;}
+  header{display:flex; align-items:center; justify-content:space-between; gap:16px; padding:20px 20px 8px 20px;}
   h1{font-size:22px; margin:0}
   .muted{color:var(--muted); font-weight:400}
-  .toolbar{
-    display:flex; flex-wrap:wrap; gap:8px; align-items:center; padding:0 20px 16px 20px;
-  }
+  .toolbar{display:flex; flex-wrap:wrap; gap:8px; align-items:center; padding:0 20px 16px 20px;}
   .btn, .file{
     appearance:none; border:1px solid var(--border); border-radius:10px; padding:10px 14px;
     background:#0b1220; color:var(--white); cursor:pointer;
   }
   .btn:hover{border-color:#2b3648}
   .btn.accent{border-color:transparent; background:linear-gradient(90deg, #0891b2, #06b6d4); color:#001016; font-weight:700}
-  .input{
+  .input, select{
     background:#0b1220; border:1px solid var(--border); border-radius:10px; color:var(--white);
     padding:10px 12px; min-width:220px;
   }
+  select{width:100%}
   .hint{font-size:12px; color:var(--muted); margin-left:4px}
   table{width:100%; border-collapse:collapse}
-  thead th{
-    text-align:left; font-weight:700; color:#cbd5e1; font-size:13px; text-transform:uppercase; letter-spacing:.06em;
-    border-bottom:1px solid var(--border); padding:14px 12px;
-  }
+  thead th{text-align:left; font-weight:700; color:#cbd5e1; font-size:13px; text-transform:uppercase; letter-spacing:.06em;
+    border-bottom:1px solid var(--border); padding:14px 12px;}
   tbody td{border-top:1px dashed #1b2233; padding:10px 12px; vertical-align:middle}
   tbody tr:hover{background:#0c1426}
   .number{width:120px}
@@ -71,9 +51,7 @@
   .grid2{display:grid; grid-template-columns:1fr auto; gap:8px; align-items:center}
   .small{font-size:12px; color:var(--muted)}
   .footnote{padding:12px 20px 20px 20px}
-  @media (max-width:880px){
-    .number{width:110px}
-  }
+  @media (max-width:880px){ .number{width:110px} }
 </style>
 </head>
 <body>
@@ -82,7 +60,7 @@
       <header>
         <div>
           <h1>Conferência de Pallets</h1>
-          <div class="muted">Escolha até 20 produtos, informe a quantidade da nota e veja os pallets calculados automaticamente.</div>
+          <div class="muted">Selecione até 20 produtos do arquivo e informe a quantidade da nota para ver os pallets.</div>
         </div>
         <button class="btn accent" id="btnLimpar">Limpar tudo</button>
       </header>
@@ -94,13 +72,13 @@
         </div>
         <div class="grid2" style="min-width:320px">
           <input type="file" id="filePicker" class="file" accept=".csv,.xlsx,.xls" />
-          <span class="hint">Anexe seu CSV/XLSX ou coloque <code>produtos.csv</code> na mesma pasta.</span>
+          <span class="hint">Anexe seu CSV/XLSX ou deixe <code>produtos.csv</code> na mesma pasta.</span>
         </div>
       </div>
 
       <div style="padding:0 20px 12px 20px" class="small">
         <span class="pill">Regra de cálculo</span> Pallets = <strong>Quantidade da Nota ÷ Caixas/Pallet</strong>.
-        Também mostramos <em>pallets cheios</em> e <em>caixas restantes</em>.
+        Mostramos também <em>pallets cheios</em> e <em>caixas restantes</em>.
       </div>
 
       <div style="overflow:auto">
@@ -128,7 +106,7 @@
       </div>
 
       <div class="footnote small">
-        Dica: mantenha um arquivo <code>produtos.csv</code> com cabeçalho <code>Produto,CaixasPorPallet</code> no mesmo diretório desta página para carregar automaticamente na abertura.
+        Mantenha um <code>produtos.csv</code> com cabeçalho <code>Produto,CaixasPorPallet</code> no mesmo diretório para carregar automaticamente.
       </div>
     </div>
   </div>
@@ -142,7 +120,6 @@ const toNumber = v => {
   if (!v) return NaN;
   return Number(String(v).replace(/\./g,'').replace(',', '.'));
 };
-const sleep = ms => new Promise(r => setTimeout(r, ms));
 
 /** ================== Base de produtos =================== */
 let produtos = []; // [{nome, caixasPorPallet}]
@@ -153,9 +130,8 @@ async function carregarCSVTexto(csvText){
   const linhas = csvText.split(/\r?\n/).map(l=>l.trim()).filter(Boolean);
   const out = [];
   for (let i=0;i<linhas.length;i++){
-    // Suporta vírgula como separador; ignora aspas simples
     const parts = linhas[i].split(/,(?![^"]*"(?:(?:[^"]*"){2})*[^"]*$)/).map(s => s.replace(/^"|"$/g,'').trim());
-    if (i===0 && parts[0].toLowerCase().includes('produto')) continue; // ignora cabeçalho
+    if (i===0 && parts[0]?.toLowerCase().includes('produto')) continue; // cabeçalho
     if (parts.length < 2) continue;
     const nome = parts[0];
     const caixas = toNumber(parts[1]);
@@ -178,7 +154,6 @@ async function carregarDeArquivo(arquivo){
     const text = await arquivo.text();
     return await carregarCSVTexto(text);
   } else {
-    // XLSX via SheetJS
     const data = await arquivo.arrayBuffer();
     const wb = XLSX.read(data, {type:'array'});
     const ws = wb.Sheets[wb.SheetNames[0]];
@@ -191,21 +166,19 @@ async function carregarDeArquivo(arquivo){
 function atualizarMapa(prodList){
   produtos = prodList.sort((a,b)=>a.nome.localeCompare(b.nome,'pt-BR',{sensitivity:'base'}));
   mapa = new Map(produtos.map(p=>[p.nome, p.caixasPorPallet]));
+  montarOpcoesSelect(); // atualiza todas as listas
 }
 
 /** ================== UI: Linhas e cálculos =================== */
 function criarLinha(index){
   const tr = document.createElement('tr');
 
-  // Produto (input + datalist)
+  // Produto (SELECT com opções do CSV)
   const tdProduto = document.createElement('td');
-  const inputProduto = document.createElement('input');
-  inputProduto.setAttribute('list', 'listaProdutos');
-  inputProduto.placeholder = 'Selecione ou digite o nome do produto';
-  inputProduto.className = 'input';
-  inputProduto.autocomplete = 'off';
-  inputProduto.dataset.idx = index;
-  tdProduto.appendChild(inputProduto);
+  const selectProduto = document.createElement('select');
+  selectProduto.className = 'input';
+  selectProduto.dataset.idx = index;
+  tdProduto.appendChild(selectProduto);
 
   // Caixas por pallet (readonly)
   const tdCaixas = document.createElement('td'); tdCaixas.className = 'right';
@@ -239,8 +212,8 @@ function criarLinha(index){
   tr.appendChild(tdProduto); tr.appendChild(tdCaixas); tr.appendChild(tdQtd); tr.appendChild(tdPallets); tr.appendChild(tdDetalhe);
 
   // Eventos
-  inputProduto.addEventListener('change', ()=>{
-    const nome = inputProduto.value.trim();
+  selectProduto.addEventListener('change', ()=>{
+    const nome = selectProduto.value;
     if (mapa.has(nome)){
       const cx = mapa.get(nome);
       caixas.value = fmt(cx);
@@ -283,20 +256,30 @@ function montarLinhas(){
   for (let i=0;i<MAX_LINHAS;i++){
     tbody.appendChild(criarLinha(i+1));
   }
+  montarOpcoesSelect(); // preenche selects existentes com a base atual (se houver)
 }
 
-function montarDatalist(){
-  // Remove antigo se existir
-  let dl = document.getElementById('listaProdutos');
-  if (dl) dl.remove();
-  dl = document.createElement('datalist');
-  dl.id = 'listaProdutos';
-  for (const p of produtos){
-    const opt = document.createElement('option');
-    opt.value = p.nome;
-    dl.appendChild(opt);
+function montarOpcoesSelect(){
+  const selects = byId('tbody').querySelectorAll('select');
+  for (const sel of selects){
+    const valorAtual = sel.value;
+    sel.innerHTML = ''; // limpa
+    const opt0 = document.createElement('option');
+    opt0.value = ''; opt0.textContent = 'Selecione um produto...';
+    opt0.disabled = true; opt0.selected = true;
+    sel.appendChild(opt0);
+    for (const p of produtos){
+      const opt = document.createElement('option');
+      opt.value = p.nome;
+      opt.textContent = p.nome;
+      sel.appendChild(opt);
+    }
+    // tenta restaurar escolha se ainda existir
+    if (valorAtual && mapa.has(valorAtual)){
+      sel.value = valorAtual;
+      sel.dispatchEvent(new Event('change'));
+    }
   }
-  document.body.appendChild(dl);
 }
 
 function atualizarTotais(){
@@ -330,9 +313,8 @@ async function tentarCarregarAutomatico(){
   try{
     const lista = await carregarDeURL('produtos.csv');
     atualizarMapa(lista);
-    montarDatalist();
   }catch(e){
-    // Silencioso se não encontrar
+    // Se não achar, mantém vazio até o usuário carregar manualmente
   }
 }
 
@@ -342,7 +324,6 @@ byId('btnCarregarURL').addEventListener('click', async ()=>{
   try{
     const lista = await carregarDeURL(url);
     atualizarMapa(lista);
-    montarDatalist();
     alert('Base carregada com sucesso!');
   }catch(e){
     alert('Falha ao carregar: ' + e.message);
@@ -355,7 +336,6 @@ byId('filePicker').addEventListener('change', async (ev)=>{
   try{
     const lista = await carregarDeArquivo(file);
     atualizarMapa(lista);
-    montarDatalist();
     alert('Base carregada com sucesso!');
   }catch(e){
     alert('Falha ao ler arquivo: ' + e.message);
@@ -370,7 +350,6 @@ byId('btnLimpar').addEventListener('click', ()=>{
 (async function main(){
   montarLinhas();
   await tentarCarregarAutomatico();
-  montarDatalist();
 })();
 </script>
 </body>
